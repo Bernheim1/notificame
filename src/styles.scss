@@ -1,1 +1,33 @@
 /* You can add global styles to this file, and also import other style files */
+@import "../node_modules/bootstrap/scss/functions";
+@import "../node_modules/bootstrap/scss/variables";
+
+$primary:       #08236e;
+// $secondary:     $yellow-300;
+// $success:       $green;
+// $info:          $cyan;
+// $warning:       $yellow;
+// $danger:        $red;
+// $light:         $gray-100;
+// $dark:          $gray-900;
+
+// //futhermore it's necesary override the $theme-colors
+
+$theme-colors: (
+  "primary":    $primary,
+//   "secondary":  $secondary,
+//   "success":    $success,
+//   "info":       $info,
+//   "warning":    $warning,
+//   "danger":     $danger,
+//   "light":      $light,
+//   "dark":       $dark
+);
+
+*:focus {
+    box-shadow: none !important;
+    border-color: $primary !important;
+}
+
+
+@import '../node_modules/bootstrap/scss/bootstrap.scss';

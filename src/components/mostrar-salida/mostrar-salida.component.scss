@@ -1,0 +1,16 @@
+.subrayado {
+    text-decoration: underline;
+    text-decoration-color: var(--bs-primary); /* Cambia el color según necesites */
+    text-decoration-thickness: 4px; /* Opcional: grosor de la línea */
+  }
+
+  .icon-list {
+    position: relative;
+    padding-left: 30px; /* Espacio para el ícono */
+  }
+  .icon-list i {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+  }

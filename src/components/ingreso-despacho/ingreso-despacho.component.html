@@ -1,0 +1,13 @@
+<div class="p-5 mb-4 bg-light rounded-3 border border-2 border-primary shadow">
+    <div class="container-fluid">
+      <h1 class="display-5 fw-bold">Ingrese su <span class="subrayado">primer despacho</span></h1>
+      <p class="col-md-8 fs-4">Ingresando su primer despacho aquí, podrá generar los distintos tipos de cédulas y mandamientos que necesite.</p>
+      <textarea [(ngModel)]="primerDespacho" class="form-control" id="exampleFormControlTextarea1" rows="15"></textarea>
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+        <button class="btn btn-outline-primary" type="button" (click)="onSubmit()">
+          Ingresar
+          <fa-icon [icon]="faArrowRight"></fa-icon>
+        </button>
+      </div>
+    </div>
+  </div>

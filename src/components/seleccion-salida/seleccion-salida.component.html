@@ -1,0 +1,83 @@
+<div class="p-5 mb-4 bg-light rounded-3 border border-2 border-primary shadow">
+    <div class="row">
+        <div class="col-md-6 m--1">
+            <div class="d-flex flex-column rounded-3 p-4 border border-2" role="button"
+                [ngClass]="this.tipoSalida == 1 ? 'border-primary' : 'border-secondary'" (click)="this.tipoSalida = 1">
+                <div class="row">
+                    <h2>Cédula de traslado de demanda</h2>
+                    <p>Swap the background-color utility and add a `.text-*` color utility to mix up the jumbotron look.
+                        Then, mix and match with additional component themes and more.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 m--1">
+            <div class="d-flex flex-column rounded-3 p-4 border border-2" role="button"
+                [ngClass]="this.tipoSalida == 2 ? 'border-primary' : 'border-secondary'" (click)="this.tipoSalida = 2">
+                <div class="row">
+                    <h2>Mandamiento</h2>
+                    <p>Swap the background-color utility and add a `.text-*` color utility to mix up the jumbotron look.
+                        Then, mix and match with additional component themes and more.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12 mt-4 scale-up-ver-top " *ngIf="this.tipoSalida != 0">
+        <div class="card-sin-seleccionar p-3">
+            <h1 class="fw-bold">Ingrese domicilio del <span class="subrayado">Requerido</span></h1>
+            <form [formGroup]="formulario" (ngSubmit)="onSubmit()" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Localidad</label>
+                    <input type="text" placeholder="Localidad" class="form-control" formControlName="localidad">
+                    <div class="text-danger" *ngIf="campoInvalido('localidad')">
+                        La localidad es obligatoria.
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Domicilio</label>
+                    <input type="text" placeholder="Domicilio" class="form-control" formControlName="domicilio">
+                    <div class="text-danger" *ngIf="campoInvalido('domicilio')">
+                        El domicilio es obligatorio.
+                    </div>
+                </div>
+
+                <div class="col-md-1">
+                    <label class="form-label">Nro</label>
+                    <input type="text" placeholder="Nro" class="form-control" formControlName="nro">
+                    <div class="text-danger" *ngIf="campoInvalido('nro')">
+                        Ingrese un número válido o "S/N".
+                    </div>
+                </div>
+
+                <div class="col-md-1">
+                    <label class="form-label">Piso</label>
+                    <input type="number" placeholder="Piso" class="form-control" formControlName="piso" min="0"
+                        max="99">
+                    <div class="text-danger" *ngIf="campoInvalido('piso')">
+                        El piso debe estar entre 0 y 99.
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Depto</label>
+                    <input type="text" placeholder="Depto" class="form-control" formControlName="depto">
+                    <div class="text-danger" *ngIf="campoInvalido('depto')">
+                      El departamento no es obligatorio.
+                    </div>
+                </div>
+
+                <div class="col-md-1">
+                    <label class="form-label">Unidad</label>
+                    <input type="text" placeholder="Unidad" class="form-control" formControlName="unidad">
+                </div>
+
+                <div class="d-md-flex justify-content-md-end mt-3">
+                    <button class="btn btn-outline-primary" type="submit">
+                        Ingresar
+                        <fa-icon [icon]="faArrowRight"></fa-icon>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
