@@ -3,6 +3,10 @@
     text-decoration-color: var(--bs-primary); /* Cambia el color según necesites */
     text-decoration-thickness: 4px; /* Opcional: grosor de la línea */
   }
+  .form-switch .form-check-input:checked {
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+      }
 
 .scale-up-ver-top {
 	-webkit-animation: scale-up-ver-top 0.4s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;

@@ -21,7 +21,7 @@ import { MostrarSalidaComponent } from '../components/mostrar-salida/mostrar-sal
 export class AppComponent {
   faEnvelope = faEnvelope;
   faRepeat = faRepeat;
-  step : TipoStepEnum = TipoStepEnum.MostrarSalida;
+  step : TipoStepEnum = TipoStepEnum.SeleccionSalida;
   textoPrimerDespacho : string = '';
   salida : Salida = new Salida();
 

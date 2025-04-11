@@ -2,8 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Output } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { Salida } from '../../shared/models/salida';
+import { TipoSalidaEnum } from '../../shared/enums/tipo-salida-enum';
 
 @Component({
   selector: 'app-seleccion-salida',
@@ -13,9 +14,9 @@ import { Salida } from '../../shared/models/salida';
   styleUrl: './seleccion-salida.component.scss'
 })
 export class SeleccionSalidaComponent {
-  faArrowRight = faArrowRight;
+  faCircleInfo = faCircleInfo;
   @Output() salidaSeleccionada = new EventEmitter<Salida>();
-  tipoSalida = 0;
+  tipoSalida = TipoSalidaEnum.Mandamiento;
   formulario: FormGroup;
 
   constructor(private fb: FormBuilder) {
