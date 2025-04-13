@@ -5,18 +5,19 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { Salida } from '../../shared/models/salida';
 import { TipoSalidaEnum } from '../../shared/enums/tipo-salida-enum';
+import { PreventEnterDirective } from '../../shared/directives/prevent-enter.directive';
 
 @Component({
   selector: 'app-seleccion-salida',
   standalone: true,
-  imports: [CommonModule, FormsModule ,FontAwesomeModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule ,FontAwesomeModule, ReactiveFormsModule, PreventEnterDirective],
   templateUrl: './seleccion-salida.component.html',
   styleUrl: './seleccion-salida.component.scss'
 })
 export class SeleccionSalidaComponent {
   faCircleInfo = faCircleInfo;
   @Output() salidaSeleccionada = new EventEmitter<Salida>();
-  tipoSalida = TipoSalidaEnum.Mandamiento;
+  tipoSalida = TipoSalidaEnum.SinAsignar;
   formulario: FormGroup;
 
   constructor(private fb: FormBuilder) {
