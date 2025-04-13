@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Output } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
+import { faArrowRight, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { Salida } from '../../shared/models/salida';
 import { TipoSalidaEnum } from '../../shared/enums/tipo-salida-enum';
 import { PreventEnterDirective } from '../../shared/directives/prevent-enter.directive';
@@ -16,6 +16,7 @@ import { PreventEnterDirective } from '../../shared/directives/prevent-enter.dir
 })
 export class SeleccionSalidaComponent {
   faCircleInfo = faCircleInfo;
+  faArrowRight = faArrowRight;
   @Output() salidaSeleccionada = new EventEmitter<Salida>();
   tipoSalida = TipoSalidaEnum.SinAsignar;
   formulario: FormGroup;
