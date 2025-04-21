@@ -23,12 +23,43 @@ export class SeleccionSalidaComponent {
 
   constructor(private fb: FormBuilder) {
     this.formulario = this.fb.group({
-      localidad: ['', [Validators.required, Validators.minLength(3)]],
-      domicilio: ['', [Validators.required]],
-      nro: ['', [Validators.required, this.nroValidator]],
-      piso: ['', [Validators.pattern(/^\d*$/), Validators.min(0), Validators.max(99)]], 
-      depto: ['', [Validators.minLength(1)]],
-      unidad: ['']
+      organo: this.fb.group({
+        organo: ['', [Validators.required]],
+        juzgadoInterviniente: ['', [Validators.required]],
+        juzgadoTribunal: ['', [Validators.required]],
+        direccionJuzgado: ['', [Validators.required]], 
+      }),
+      domicilioRequerido: this.fb.group({
+        localidad: ['', [Validators.required, Validators.minLength(3)]],
+        domicilio: ['', [Validators.required]],
+        nro: ['', [Validators.required, this.nroValidator]],
+        piso: ['', [Validators.pattern(/^\d*$/), Validators.min(0), Validators.max(99)]], 
+        depto: ['', [Validators.minLength(1)]],
+        unidad: ['']
+      }),
+      expediente: this.fb.group({
+        tipoDiligencia: ['', [Validators.required]],
+        caratulaExpediente: ['', [Validators.required]],
+        copiasTraslado: [false, [Validators.required]],
+      }),
+      caracter: this.fb.group({
+        urgente: [false, [Validators.required]],
+        habilitacionDiaHora: [false, [Validators.required]],
+        bajoResponsabilidad: [false, [Validators.required]],
+      }),
+      tipoDomicilio: this.fb.group({
+        denunciado: [false, [Validators.required]],
+        constituido: [false, [Validators.required]],
+      }),
+      facultadesAtribuciones: this.fb.group({
+        allanamiento: [false, [Validators.required]],
+        allanamientoDomicilioSinOcupantes: [false, [Validators.required]],
+        auxilioFuerzaPublica: [false, [Validators.required]],
+        conCerrajero: [false, [Validators.required]],
+        denunciaOtroDomicilio: [false, [Validators.required]],
+        denunciaBienes: [false, [Validators.required]],
+        otros: [false, [Validators.required]],
+      }),
     });
   }
 
@@ -57,12 +88,13 @@ export class SeleccionSalidaComponent {
     return retorno;
   }
 
-  campoInvalido(campo: string) {
-    return this.formulario.controls[campo].invalid && this.formulario.controls[campo].touched;
+  campoInvalido(path: string): boolean {
+    let control = this.formulario.get(path);
+    return control ? control.invalid && control.touched : false;
   }
 
   nroValidator(control: any) {
-    const value = control.value;
+    let value = control.value;
     // Acepta "S/N" o valores numéricos (incluyendo 0)
     if (value === 'S/N' || value === 's/n' || /^[0-9]+$/.test(value)) {
       return null; // Si es válido, no devuelve error

@@ -34,33 +34,39 @@
                             <h4 class="">Órgano</h4>
                         </div>
                         <div class="card-body">
-                            <form [formGroup]="formulario" (ngSubmit)="onSubmit()" class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label">Órgano</label>
-                                <input type="text" placeholder="Órgano" class="form-control" formControlName="organo">
-                                <div class="text-danger" *ngIf="campoInvalido('organo')">
-                                    El organo es obligatorio.
+                        <form [formGroup]="formulario" (ngSubmit)="onSubmit()">
+                            <div formGroupName="organo" class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Órgano</label>
+                                    <input type="text" placeholder="Órgano" class="form-control" formControlName="organo"
+                                    [ngClass]="{'is-invalid': campoInvalido('organo.organo')}">
+                                    <div class="text-danger" *ngIf="campoInvalido('organo.organo')">
+                                        El organo es obligatorio.
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Juzgado Interviniente</label>
-                                <input type="text" placeholder="Juzgado Interviniente" class="form-control" formControlName="juzgadoInterviniente">
-                                <div class="text-danger" *ngIf="campoInvalido('juzgadoInterviniente')">
-                                    El Juzgado Interviniente es obligatorio.
+                                <div class="col-12">
+                                    <label class="form-label">Juzgado Interviniente</label>
+                                    <input type="text" placeholder="Juzgado Interviniente" class="form-control" formControlName="juzgadoInterviniente"
+                                    [ngClass]="{'is-invalid': campoInvalido('organo.juzgadoInterviniente')}">
+                                    <div class="text-danger" *ngIf="campoInvalido('organo.juzgadoInterviniente')">
+                                        El Juzgado Interviniente es obligatorio.
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Juzgado/Tribunal</label>
-                                <input type="text" placeholder="Juzgado/Tribunal" class="form-control" formControlName="juzgadoTribunal">
-                                <div class="text-danger" *ngIf="campoInvalido('juzgadoTribunal')">
-                                    El Juzgado/Tribunal es obligatorio.
+                                <div class="col-12">
+                                    <label class="form-label">Juzgado/Tribunal</label>
+                                    <input type="text" placeholder="Juzgado/Tribunal" class="form-control" formControlName="juzgadoTribunal"
+                                    [ngClass]="{'is-invalid': campoInvalido('organo.juzgadoTribunal')}">
+                                    <div class="text-danger" *ngIf="campoInvalido('organo.juzgadoTribunal')">
+                                        El Juzgado/Tribunal es obligatorio.
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Dirección</label>
-                                <input type="text" placeholder="Dirección" class="form-control" formControlName="direccion">
-                                <div class="text-danger" *ngIf="campoInvalido('direccion')">
-                                    La dirección es obligatoria.
+                                <div class="col-12">
+                                    <label class="form-label">Dirección</label>
+                                    <input type="text" placeholder="Dirección" class="form-control" formControlName="direccionJuzgado"
+                                    [ngClass]="{'is-invalid': campoInvalido('organo.direccionJuzgado')}">
+                                    <div class="text-danger" *ngIf="campoInvalido('organo.direccionJuzgado')">
+                                        La dirección es obligatoria.
+                                    </div>
                                 </div>
                             </div>
                         </form>
@@ -70,54 +76,60 @@
                 <div class="col-md-6 col-xs-12">
                     <div class="card">
                         <div class="card-header d-flex justify-content-center align-items-center">
-                            <h4 class="">Domicilio del <span class="text-primary">Requerido</span></h4>
+                            <h4 class="">Domicilio del <span class="subrayado">Requerido</span></h4>
                         </div>
                         <div class="card-body">
-                            <form [formGroup]="formulario" (ngSubmit)="onSubmit()" class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label">Localidad</label>
-                                <input type="text" placeholder="Localidad" class="form-control" formControlName="localidad">
-                                <div class="text-danger" *ngIf="campoInvalido('localidad')">
-                                    La localidad es obligatoria.
+                            <form [formGroup]="formulario" (ngSubmit)="onSubmit()">
+                            <div formGroupName="domicilioRequerido" class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label">Localidad</label>
+                                    <input type="text" placeholder="Localidad" class="form-control" formControlName="localidad"
+                                    [ngClass]="{'is-invalid': campoInvalido('domicilioRequerido.localidad')}">
+                                    <div class="text-danger" *ngIf="campoInvalido('domicilioRequerido.localidad')">
+                                        La localidad es obligatoria.
+                                    </div>
                                 </div>
-                            </div>
-                
-                            <div class="col-12">
-                                <label class="form-label">Domicilio</label>
-                                <input type="text" placeholder="Domicilio" class="form-control" formControlName="domicilio">
-                                <div class="text-danger" *ngIf="campoInvalido('domicilio')">
-                                    El domicilio es obligatorio.
+                    
+                                <div class="col-12">
+                                    <label class="form-label">Domicilio</label>
+                                    <input type="text" placeholder="Domicilio" class="form-control" formControlName="domicilio"
+                                    [ngClass]="{'is-invalid': campoInvalido('domicilioRequerido.domicilio')}">
+                                    <div class="text-danger" *ngIf="campoInvalido('domicilioRequerido.domicilio')">
+                                        El domicilio es obligatorio.
+                                    </div>
                                 </div>
-                            </div>
-                
-                            <div class="col-md-6">
-                                <label class="form-label">Nro</label>
-                                <input type="text" placeholder="Nro" class="form-control" formControlName="nro">
-                                <div class="text-danger" *ngIf="campoInvalido('nro')">
-                                    Ingrese un número válido o "S/N".
+                    
+                                <div class="col-md-6">
+                                    <label class="form-label">Nro</label>
+                                    <input type="text" placeholder="Nro" class="form-control" formControlName="nro"
+                                    [ngClass]="{'is-invalid': campoInvalido('domicilioRequerido.nro')}">
+                                    <div class="text-danger" *ngIf="campoInvalido('domicilioRequerido.nro')">
+                                        Ingrese un número válido o "S/N".
+                                    </div>
                                 </div>
-                            </div>
-                
-                            <div class="col-md-6">
-                                <label class="form-label">Piso</label>
-                                <input type="number" placeholder="Piso" class="form-control" formControlName="piso" min="0"
-                                    max="99">
-                                <div class="text-danger" *ngIf="campoInvalido('piso')">
-                                    El piso debe estar entre 0 y 99.
+                    
+                                <div class="col-md-6">
+                                    <label class="form-label">Piso</label>
+                                    <input type="number" placeholder="Piso" class="form-control" formControlName="piso" min="0" max="99" 
+                                    [ngClass]="{'is-invalid': campoInvalido('domicilioRequerido.piso')}">
+                                    <div class="text-danger" *ngIf="campoInvalido('domicilioRequerido.piso')">
+                                        El piso debe estar entre 0 y 99.
+                                    </div>
                                 </div>
-                            </div>
-                
-                            <div class="col-md-6">
-                                <label class="form-label">Depto</label>
-                                <input type="text" placeholder="Depto" class="form-control" formControlName="depto">
-                                <div class="text-danger" *ngIf="campoInvalido('depto')">
-                                    El departamento no es obligatorio.
+                    
+                                <div class="col-md-6">
+                                    <label class="form-label">Depto</label>
+                                    <input type="text" placeholder="Depto" class="form-control" formControlName="depto"
+                                    [ngClass]="{'is-invalid': campoInvalido('domicilioRequerido.depto')}">
+                                    <div class="text-danger" *ngIf="campoInvalido('domicilioRequerido.depto')">
+                                        El departamento no es obligatorio.
+                                    </div>
                                 </div>
-                            </div>
-                
-                            <div class="col-md-6">
-                                <label class="form-label">Unidad</label>
-                                <input type="text" placeholder="Unidad" class="form-control" formControlName="unidad">
+                    
+                                <div class="col-md-6">
+                                    <label class="form-label">Unidad</label>
+                                    <input type="text" placeholder="Unidad" class="form-control" formControlName="unidad">
+                                </div>
                             </div>
                         </form>
                         </div>
@@ -132,27 +144,29 @@
                         </div>
                         <div class="card-body">
                             <form [formGroup]="formulario" (ngSubmit)="onSubmit()" class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label">Tipo de diligencia</label>
-                                <input type="text" placeholder="Tipo de diligencia" class="form-control" formControlName="tipoDiligencia">
-                                <div class="text-danger" *ngIf="campoInvalido('tipoDiligencia')">
-                                    El Tipo de diligencia es obligatorio.
-                                </div>
-                            </div>
-                
-                            <div class="col-12">
-                                <label class="form-label">Carátula del expediente</label>
-                                <input type="text" placeholder="Carátula del expediente" class="form-control" formControlName="caratulaExpediente">
-                                <div class="text-danger" *ngIf="campoInvalido('caratulaExpediente')">
-                                    La Carátula del expediente es obligatoria.
-                                </div>
-                            </div>
-                
-                            <div class="col-md-12">
-                                <div class="form-check form-switch">
-                                    <label class="form-check-label" for="flexSwitchCheckChecked">Copias para traslado</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" >
+                            <div formGroupName="expediente">
+                                <div class="col-12">
+                                    <label class="form-label">Tipo de diligencia</label>
+                                    <input type="text" placeholder="Tipo de diligencia" class="form-control" formControlName="tipoDiligencia">
+                                    <div class="text-danger" *ngIf="campoInvalido('tipoDiligencia')">
+                                        El Tipo de diligencia es obligatorio.
                                     </div>
+                                </div>
+                    
+                                <div class="col-12">
+                                    <label class="form-label">Carátula del expediente</label>
+                                    <input type="text" placeholder="Carátula del expediente" class="form-control" formControlName="caratulaExpediente">
+                                    <div class="text-danger" *ngIf="campoInvalido('caratulaExpediente')">
+                                        La Carátula del expediente es obligatoria.
+                                    </div>
+                                </div>
+                    
+                                <div class="col-md-12">
+                                    <div class="form-check form-switch">
+                                        <label class="form-check-label" for="copiasTraslado">Copias para traslado</label>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="copiasTraslado" formControlName="copiasTraslado">
+                                        </div>
+                                </div>
                             </div>
                         </form>
                         </div>
@@ -167,20 +181,20 @@
                             <form [formGroup]="formulario" (ngSubmit)="onSubmit()" class="row g-3">
                             <div class="col-md-6">
                                 <div class="form-check form-switch">
-                                    <label class="form-check-label" for="flexSwitchCheckChecked">Urgente</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" >
+                                    <label class="form-check-label" for="urgente">Urgente</label>
+                                    <input class="form-check-input" type="checkbox" role="switch" id="urgente" formControlName="urgente" >
                                     </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-check form-switch">
-                                    <label class="form-check-label" for="flexSwitchCheckChecked">Y/o habilitacion de dia y hora</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" >
+                                    <label class="form-check-label" for="habilitacionDiaHora">Y/o habilitacion de dia y hora</label>
+                                    <input class="form-check-input" type="checkbox" role="switch" id="habilitacionDiaHora" formControlName="habilitacionDiaHora" >
                                     </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-check form-switch">
-                                    <label class="form-check-label" for="flexSwitchCheckChecked">Bajo responsabilidad</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" >
+                                    <label class="form-check-label" for="bajoResponsabilidad">Bajo responsabilidad</label>
+                                    <input class="form-check-input" type="checkbox" role="switch" id="bajoResponsabilidad" formControlName="bajoResponsabilidad" >
                                     </div>
                             </div>
                         </form>
@@ -194,14 +208,14 @@
                             <form [formGroup]="formulario" (ngSubmit)="onSubmit()" class="row g-3">
                             <div class="col-md-4">
                                 <div class="form-check form-switch">
-                                    <label class="form-check-label" for="flexSwitchCheckChecked">Denunciado</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" >
+                                    <label class="form-check-label" for="denunciado">Denunciado</label>
+                                    <input class="form-check-input" type="checkbox" role="switch" id="denunciado" formControlName="denunciado">
                                     </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-check form-switch">
-                                    <label class="form-check-label" for="flexSwitchCheckChecked">Constituido</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" >
+                                    <label class="form-check-label" for="constituido">Constituido</label>
+                                    <input class="form-check-input" type="checkbox" role="switch" id="constituido" formControlName="constituido">
                                     </div>
                             </div>
                         </form>
@@ -219,44 +233,44 @@
                             <form [formGroup]="formulario" (ngSubmit)="onSubmit()" class="row g-3">
                             <div class="col-md-3">
                                 <div class="form-check form-switch">
-                                    <label class="form-check-label" for="flexSwitchCheckChecked">Allanamiento</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" >
+                                    <label class="form-check-label" for="allanamiento">Allanamiento</label>
+                                    <input class="form-check-input" type="checkbox" role="switch" id="allanamiento" formControlName="allanamiento">
                                     </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-check form-switch">
-                                    <label class="form-check-label" for="flexSwitchCheckChecked">Allanamiento en domicilio sin ocupantes</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" >
+                                    <label class="form-check-label" for="allanamientoDomicilioSinOcupantes">Allanamiento en domicilio sin ocupantes</label>
+                                    <input class="form-check-input" type="checkbox" role="switch" id="allanamientoDomicilioSinOcupantes" formControlName="allanamientoDomicilioSinOcupantes">
                                     </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-check form-switch">
-                                    <label class="form-check-label" for="flexSwitchCheckChecked">Con auxilio de la fuerza pública</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" >
+                                    <label class="form-check-label" for="auxilioFuerzaPublica">Con auxilio de la fuerza pública</label>
+                                    <input class="form-check-input" type="checkbox" role="switch" id="auxilioFuerzaPublica" formControlName="auxilioFuerzaPublica">
                                     </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-check form-switch">
-                                    <label class="form-check-label" for="flexSwitchCheckChecked">Con cerrajero</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" >
+                                    <label class="form-check-label" for="conCerrajero">Con cerrajero</label>
+                                    <input class="form-check-input" type="checkbox" role="switch" id="conCerrajero" formControlName="conCerrajero" >
                                     </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-check form-switch">
-                                    <label class="form-check-label" for="flexSwitchCheckChecked">Denuncia de otro domicilio</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" >
+                                    <label class="form-check-label" for="denunciaOtroDomicilio">Denuncia de otro domicilio</label>
+                                    <input class="form-check-input" type="checkbox" role="switch" id="denunciaOtroDomicilio" formControlName="denunciaOtroDomicilio" >
                                     </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-check form-switch">
-                                    <label class="form-check-label" for="flexSwitchCheckChecked">Denuncia de bienes</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" >
+                                    <label class="form-check-label" for="denunciaBienes">Denuncia de bienes</label>
+                                    <input class="form-check-input" type="checkbox" role="switch" id="denunciaBienes" formControlName="denunciaBienes" >
                                     </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="form-check form-switch">
-                                    <label class="form-check-label" for="flexSwitchCheckChecked">Otros</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" >
+                                    <label class="form-check-label" for="otros">Otros</label>
+                                    <input class="form-check-input" type="checkbox" role="switch" id="otros" formControlName="otros" >
                                     </div>
                             </div>
                         </form>
