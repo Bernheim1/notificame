@@ -57,3 +57,25 @@ textarea {
     resize: none;
     overflow: auto;
 }
+
+  .dropdown-submenu {
+    position: relative;
+  }
+
+  .dropdown-submenu > .dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: 0;
+    margin-left: 0.1rem;
+    position: absolute;
+    display: none;
+  }
+
+  .dropdown-submenu:hover > .dropdown-menu {
+    display: block;
+  }
+
+  .dropdown-submenu > a::after {
+    content: " ▸"; 
+    float: right;
+  }

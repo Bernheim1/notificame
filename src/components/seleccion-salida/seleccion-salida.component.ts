@@ -69,6 +69,8 @@ export class SeleccionSalidaComponent {
       return;
     }
 
+    console.log(this.formulario.value());
+
     var retorno = this.mapSalida();
 
     this.salidaSeleccionada.emit(retorno);

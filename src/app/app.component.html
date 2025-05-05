@@ -2,9 +2,12 @@
   <header class="mb-4 border-bottom">
     <div class="row">
       <div class="col-6">
-        <div class="d-flex align-items-center text-dark text-decoration-none">
-          <fa-icon style="font-size: 2rem; color: var(--bs-primary)" [icon]="faEnvelope"></fa-icon> &nbsp;
-          <span class="fs-4">Notificame</span>
+        <div class="d-flex align-items-center text-dark text-decoration-none brand-logo">
+          <fa-icon [icon]="faGavel" class="logo-icon"></fa-icon>
+          <div class="ms-2">
+            <div class="brand-title">Confront<span class="brand-ia">IA</span></div>
+            <div class="brand-subtitle">Automatización Legal Inteligente</div>
+          </div>
         </div>
       </div>
       <div class="col-6">
@@ -19,7 +22,7 @@
   </header>
 
   <div *ngIf="this.step == 0">
-    <app-ingreso-despacho (textoIngresado)="onTextoIngresado($event)"></app-ingreso-despacho>
+    <app-ingreso-despacho (textoIngresado)="onTextoIngresado($event)" (tipoSalidaOutput)="onTipoSalidaSeleccionado($event)" (subtipoSalidaOutput)="onSubtipoSalidaSeleccionado($event)"></app-ingreso-despacho>
   </div>
 
   <div *ngIf="this.step == 1">

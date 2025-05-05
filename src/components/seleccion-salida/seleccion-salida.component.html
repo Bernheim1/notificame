@@ -22,6 +22,7 @@
         </div>
     </div>
     <div class="col-md-12 mt-4 scale-up-ver-top " *ngIf="this.tipoSalida != 0">
+        <form [formGroup]="formulario" (ngSubmit)="onSubmit()">
         <div class="container">
             <div class="d-flex align-items-center justify-content-center mb-2">
                 <fa-icon style="font-size: 1.7rem; color: var(--bs-primary)" [icon]="faCircleInfo"></fa-icon>&nbsp;&nbsp;
@@ -34,7 +35,6 @@
                             <h4 class="">Órgano</h4>
                         </div>
                         <div class="card-body">
-                        <form [formGroup]="formulario" (ngSubmit)="onSubmit()">
                             <div formGroupName="organo" class="row g-3">
                                 <div class="col-12">
                                     <label class="form-label">Órgano</label>
@@ -69,7 +69,6 @@
                                     </div>
                                 </div>
                             </div>
-                        </form>
                         </div>
                     </div>
                 </div>
@@ -79,7 +78,6 @@
                             <h4 class="">Domicilio del <span class="subrayado">Requerido</span></h4>
                         </div>
                         <div class="card-body">
-                            <form [formGroup]="formulario" (ngSubmit)="onSubmit()">
                             <div formGroupName="domicilioRequerido" class="row g-3">
                                 <div class="col-12">
                                     <label class="form-label">Localidad</label>
@@ -131,7 +129,6 @@
                                     <input type="text" placeholder="Unidad" class="form-control" formControlName="unidad">
                                 </div>
                             </div>
-                        </form>
                         </div>
                     </div>
                 </div>
@@ -143,32 +140,32 @@
                             <h4 class="">Expediente</h4>
                         </div>
                         <div class="card-body">
-                            <form [formGroup]="formulario" (ngSubmit)="onSubmit()" class="row g-3">
-                            <div formGroupName="expediente">
+                            <div formGroupName="expediente" class="row g-3">
                                 <div class="col-12">
                                     <label class="form-label">Tipo de diligencia</label>
-                                    <input type="text" placeholder="Tipo de diligencia" class="form-control" formControlName="tipoDiligencia">
-                                    <div class="text-danger" *ngIf="campoInvalido('tipoDiligencia')">
+                                    <input type="text" placeholder="Tipo de diligencia" class="form-control" formControlName="tipoDiligencia"
+                                    [ngClass]="{'is-invalid': campoInvalido('expediente.tipoDiligencia')}">
+                                    <div class="text-danger" *ngIf="campoInvalido('expediente.tipoDiligencia')">
                                         El Tipo de diligencia es obligatorio.
                                     </div>
                                 </div>
                     
                                 <div class="col-12">
                                     <label class="form-label">Carátula del expediente</label>
-                                    <input type="text" placeholder="Carátula del expediente" class="form-control" formControlName="caratulaExpediente">
-                                    <div class="text-danger" *ngIf="campoInvalido('caratulaExpediente')">
+                                    <input type="text" placeholder="Carátula del expediente" class="form-control" formControlName="caratulaExpediente"
+                                    [ngClass]="{'is-invalid': campoInvalido('expediente.caratulaExpediente')}">
+                                    <div class="text-danger" *ngIf="campoInvalido('expediente.caratulaExpediente')">
                                         La Carátula del expediente es obligatoria.
                                     </div>
                                 </div>
                     
                                 <div class="col-md-12">
-                                    <div class="form-check form-switch">
+                                    <div class="form-check form-switch mt-3">
                                         <label class="form-check-label" for="copiasTraslado">Copias para traslado</label>
                                         <input class="form-check-input" type="checkbox" role="switch" id="copiasTraslado" formControlName="copiasTraslado">
-                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </form>
                         </div>
                     </div>
                 </div>
@@ -178,26 +175,26 @@
                             <h4 class="">Carácter</h4>
                         </div>
                         <div class="card-body">
-                            <form [formGroup]="formulario" (ngSubmit)="onSubmit()" class="row g-3">
-                            <div class="col-md-6">
-                                <div class="form-check form-switch">
-                                    <label class="form-check-label" for="urgente">Urgente</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="urgente" formControlName="urgente" >
+                            <div formGroupName="caracter" class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch">
+                                        <label class="form-check-label" for="urgente">Urgente</label>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="urgente" formControlName="urgente" >
                                     </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-check form-switch">
-                                    <label class="form-check-label" for="habilitacionDiaHora">Y/o habilitacion de dia y hora</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="habilitacionDiaHora" formControlName="habilitacionDiaHora" >
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch">
+                                        <label class="form-check-label" for="habilitacionDiaHora">Y/o habilitacion de dia y hora</label>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="habilitacionDiaHora" formControlName="habilitacionDiaHora" >
                                     </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-check form-switch">
-                                    <label class="form-check-label" for="bajoResponsabilidad">Bajo responsabilidad</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="bajoResponsabilidad" formControlName="bajoResponsabilidad" >
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check form-switch">
+                                        <label class="form-check-label" for="bajoResponsabilidad">Bajo responsabilidad</label>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="bajoResponsabilidad" formControlName="bajoResponsabilidad" >
                                     </div>
+                                </div>
                             </div>
-                        </form>
                         </div>
                     </div>
                     <div class="card">
@@ -205,20 +202,20 @@
                             <h4 class="">Tipo de Domicilio</h4>
                         </div>
                         <div class="card-body">
-                            <form [formGroup]="formulario" (ngSubmit)="onSubmit()" class="row g-3">
-                            <div class="col-md-4">
-                                <div class="form-check form-switch">
-                                    <label class="form-check-label" for="denunciado">Denunciado</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="denunciado" formControlName="denunciado">
+                            <div formGroupName="tipoDomicilio" class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch">
+                                        <label class="form-check-label" for="denunciado">Denunciado</label>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="denunciado" formControlName="denunciado">
                                     </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-check form-switch">
-                                    <label class="form-check-label" for="constituido">Constituido</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="constituido" formControlName="constituido">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch">
+                                        <label class="form-check-label" for="constituido">Constituido</label>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="constituido" formControlName="constituido">
                                     </div>
+                                </div>
                             </div>
-                        </form>
                         </div>
                     </div>
                 </div>
@@ -230,50 +227,50 @@
                             <h4 class="">Facultades y atribuciones</h4>
                         </div>
                         <div class="card-body">
-                            <form [formGroup]="formulario" (ngSubmit)="onSubmit()" class="row g-3">
-                            <div class="col-md-3">
-                                <div class="form-check form-switch">
-                                    <label class="form-check-label" for="allanamiento">Allanamiento</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="allanamiento" formControlName="allanamiento">
-                                    </div>
+                            <div formGroupName="facultadesAtribuciones" class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="form-check form-switch">
+                                        <label class="form-check-label" for="allanamiento">Allanamiento</label>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="allanamiento" formControlName="allanamiento">
+                                        </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check form-switch">
+                                        <label class="form-check-label" for="allanamientoDomicilioSinOcupantes">Allanamiento en domicilio sin ocupantes</label>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="allanamientoDomicilioSinOcupantes" formControlName="allanamientoDomicilioSinOcupantes">
+                                        </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check form-switch">
+                                        <label class="form-check-label" for="auxilioFuerzaPublica">Con auxilio de la fuerza pública</label>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="auxilioFuerzaPublica" formControlName="auxilioFuerzaPublica">
+                                        </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check form-switch">
+                                        <label class="form-check-label" for="conCerrajero">Con cerrajero</label>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="conCerrajero" formControlName="conCerrajero" >
+                                        </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check form-switch">
+                                        <label class="form-check-label" for="denunciaOtroDomicilio">Denuncia de otro domicilio</label>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="denunciaOtroDomicilio" formControlName="denunciaOtroDomicilio" >
+                                        </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check form-switch">
+                                        <label class="form-check-label" for="denunciaBienes">Denuncia de bienes</label>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="denunciaBienes" formControlName="denunciaBienes" >
+                                        </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check form-switch">
+                                        <label class="form-check-label" for="otros">Otros</label>
+                                        <input class="form-check-input" type="checkbox" role="switch" id="otros" formControlName="otros" >
+                                        </div>
+                                </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="form-check form-switch">
-                                    <label class="form-check-label" for="allanamientoDomicilioSinOcupantes">Allanamiento en domicilio sin ocupantes</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="allanamientoDomicilioSinOcupantes" formControlName="allanamientoDomicilioSinOcupantes">
-                                    </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="form-check form-switch">
-                                    <label class="form-check-label" for="auxilioFuerzaPublica">Con auxilio de la fuerza pública</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="auxilioFuerzaPublica" formControlName="auxilioFuerzaPublica">
-                                    </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="form-check form-switch">
-                                    <label class="form-check-label" for="conCerrajero">Con cerrajero</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="conCerrajero" formControlName="conCerrajero" >
-                                    </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="form-check form-switch">
-                                    <label class="form-check-label" for="denunciaOtroDomicilio">Denuncia de otro domicilio</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="denunciaOtroDomicilio" formControlName="denunciaOtroDomicilio" >
-                                    </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="form-check form-switch">
-                                    <label class="form-check-label" for="denunciaBienes">Denuncia de bienes</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="denunciaBienes" formControlName="denunciaBienes" >
-                                    </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="form-check form-switch">
-                                    <label class="form-check-label" for="otros">Otros</label>
-                                    <input class="form-check-input" type="checkbox" role="switch" id="otros" formControlName="otros" >
-                                    </div>
-                            </div>
-                        </form>
                         </div>
                     </div>
                 </div>
@@ -288,8 +285,8 @@
                             El Oficial de Justicia de la zona que corresponda, se constituirá, para la ejecución del presente en el domicilio de 
                             <span class="editable" contenteditable="true" appPreventEnter>HINTZ DAMIAN FERNANDO</span> 
                             sito en calle y procederá a intimar para que de pago en el acto de serle requerida la suma de 
-                            <span class="editable" contenteditable="true" appPreventEnter>CINCUENTA Y DOS MIL SETECIENTOS TREINTA Y CUATRO CON CINCUENTA CENTAVOS ($ 52.734,59)</span> 
-                            en concepto de capital, más la de 
+                            <span class="editable" contenteditable="true" appPreventEnter>CINCUENTA Y DOS MIL SETECIENTOS TREINTA Y CUATRO CON CINCUENTA CENTAVOS</span> 
+                            ($ 52.734,59) en concepto de capital, más la de 
                             <span class="editable" contenteditable="true" appPreventEnter>PESOS VEINTISEIS MIL QUINIENTOS ($ 26.500,00)</span> 
                             que el Juzgado presupuesto “prima facie” para responder intereses y costas de la ejecución. En caso de dar resultado negativo la intimación de pago, ello importará la citación a los ejecutados para oponer excepciones legítimas dentro del plazo de cinco días, bajo apercibimiento de llevarse adelante la ejecución (art. 540 CPC), como asimismo el requerimiento para que dentro de dicho plazo constituya domicilio legal bajo apercibimiento de tenerlo por constituido en los Estrados del Juzgado en los términos del art. 41 del Código Citado.
                           </div>
@@ -297,10 +294,11 @@
                 </div>
             </div>
             <div class="row mt-3 px-3">
-                <button class="btn btn-outline-primary w-100" type="button">
+                <button class="btn btn-outline-primary w-100" type="submit">
                     Generar <span class="font-bold">{{this.tipoSalida == 1 ? 'Cédula' : 'Mandamiento'}}</span>
                   </button>
             </div>
         </div>
+    </form>
     </div>
 </div>

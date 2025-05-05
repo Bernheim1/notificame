@@ -2,13 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
-import { faRepeat } from '@fortawesome/free-solid-svg-icons';
+import { faGavel, faRepeat  } from '@fortawesome/free-solid-svg-icons';
 import { IngresoDespachoComponent } from '../components/ingreso-despacho/ingreso-despacho.component';
 import { TipoStepEnum } from '../shared/enums/tipo-step-enum';
 import { SeleccionSalidaComponent } from '../components/seleccion-salida/seleccion-salida.component';
 import { Salida } from '../shared/models/salida';
 import { MostrarSalidaComponent } from '../components/mostrar-salida/mostrar-salida.component';
+import { TipoSalidaEnum } from '../shared/enums/tipo-salida-enum';
 
 
 @Component({
@@ -19,26 +19,48 @@ import { MostrarSalidaComponent } from '../components/mostrar-salida/mostrar-sal
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  faEnvelope = faEnvelope;
+  faGavel = faGavel;
   faRepeat = faRepeat;
   step : TipoStepEnum = TipoStepEnum.Inicio;
   textoPrimerDespacho : string = '';
+  tipoSalida = TipoSalidaEnum.SinAsignar;
+  subtipoSalida : any;
   salida : Salida = new Salida();
 
-  onTextoIngresado(event : string) {
+  onTextoIngresado(event : string) 
+  {
     if (event.length > 0)
     {
       this.textoPrimerDespacho = event;
+    }
+  }
+
+  onTipoSalidaSeleccionado(event : TipoSalidaEnum)
+  {
+    if (this.textoPrimerDespacho.length > 0)
+    {
+      this.tipoSalida = event;
+    }
+  }
+
+  onSubtipoSalidaSeleccionado(event : any)
+  {
+    if (this.textoPrimerDespacho.length > 0 && this.tipoSalida != TipoSalidaEnum.SinAsignar)
+    {
+      this.subtipoSalida = event;
       this.step = TipoStepEnum.SeleccionSalida;
     }
   }
 
-  onSalidaSeleccionada(event : Salida) {
+
+  onSalidaSeleccionada(event : Salida) 
+  {
     this.salida = event;
     this.step = TipoStepEnum.MostrarSalida;
   }
 
-  onReingresar() {
+  onReingresar() 
+  {
     this.step = TipoStepEnum.Inicio;
     this.textoPrimerDespacho = '';
     this.salida = new Salida();
