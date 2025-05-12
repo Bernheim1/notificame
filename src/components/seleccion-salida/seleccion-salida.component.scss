@@ -68,3 +68,48 @@ input[type="number"]::-webkit-inner-spin-button {
         outline: none;
         background-color: #eef5ff;
       }
+
+.btn-generar-flotante {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1050;
+
+  width: 90%;
+  max-width: 500px;
+
+  background-color: var(--bs-primary);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+
+  transition: 
+    background-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+.btn-generar-flotante:hover {
+  filter: brightness(95%);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -2px);
+}
+
+.btn-generar-flotante:active {
+  transform: translate(-50%, 1px) scale(0.98);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile tweaks */
+@media (max-width: 576px) {
+  .btn-generar-flotante {
+    font-size: 0.95rem;
+    padding: 0.65rem 1.25rem;
+    bottom: 15px;
+  }
+}

@@ -1,32 +1,46 @@
 <div class="p-5 mb-4 bg-light rounded-3 border border-2 border-primary shadow">
-    <div class="container-fluid">
-      <h1 class="display-5 fw-bold">Ingrese su <span class="subrayado">primer despacho</span></h1>
-      <p class="col-md-8 fs-4">Ingresando su primer despacho aquí, podrá generar los distintos tipos de cédulas y mandamientos que necesite.</p>
-      <textarea [(ngModel)]="primerDespacho" class="form-control" id="exampleFormControlTextarea1" rows="15"></textarea>
-      <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
-          <div class="dropdown">
-            <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              {{textoSalida}}
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-              <li class="dropdown-submenu">
-                <a class="dropdown-item">Cédula</a>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" (click)="seleccionTipoSalida(0, tipoCedula.TrasladoDemanda)">Traslado de Demanda</a></li>
-                </ul>
-              </li>
-              <li class="dropdown-submenu">
-                <a class="dropdown-item">Mandamiento</a>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" (click)="seleccionTipoSalida(1, tipoMandamiento.IntimacionPago)">Intimación de Pago</a></li>
-                </ul>
+  <div class="container-fluid">
+    <h1 class="display-5 fw-bold">Ingrese su <span class="subrayado">primer despacho</span></h1>
+    <p class="col-md-8 fs-4">Ingresando su primer despacho aquí, podrá generar los distintos tipos de cédulas y mandamientos que necesite.</p>
+
+    <textarea [(ngModel)]="primerDespacho" class="form-control" id="exampleFormControlTextarea1" rows="15"></textarea>
+
+    <!-- Responsive buttons -->
+    <div class="d-flex flex-column flex-sm-column flex-md-row justify-content-between align-items-stretch align-items-md-center mt-3">
+      <!-- Dropdown -->
+      <div class="dropdown mb-2 mb-md-0" style="min-width: 220px;">
+        <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+          {{textoSalida}}
+        </button>
+        <ul class="dropdown-menu">
+          <li class="dropdown-submenu">
+            <a class="dropdown-item">Cédula</a>
+            <ul class="dropdown-menu">
+              <li>
+                <a class="dropdown-item" (click)="seleccionTipoSalida(0, tipoCedula.TrasladoDemanda)">
+                  Traslado de Demanda
+                </a>
               </li>
             </ul>
-          </div>
-          <button class="btn btn-outline-primary" type="button" (click)="onSubmit()">
-            Ingresar
-            <fa-icon [icon]="faArrowRight"></fa-icon>
-          </button>
+          </li>
+          <li class="dropdown-submenu">
+            <a class="dropdown-item">Mandamiento</a>
+            <ul class="dropdown-menu">
+              <li>
+                <a class="dropdown-item" (click)="seleccionTipoSalida(1, tipoMandamiento.IntimacionPago)">
+                  Intimación de Pago
+                </a>
+              </li>
+            </ul>
+          </li>
+        </ul>
       </div>
+
+      <!-- Button -->
+      <button class="btn btn-outline-primary" type="button" (click)="onSubmit()" style="min-width: 150px;">
+        Ingresar
+        <fa-icon [icon]="faArrowRight"></fa-icon>
+      </button>
     </div>
   </div>
+</div>

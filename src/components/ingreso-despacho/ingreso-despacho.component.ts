@@ -3,7 +3,7 @@ import { Component, EventEmitter, Output, output } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { FormsModule } from '@angular/forms';
-import { TipoCedulaEnum, TipoMandamientoEnum, TipoSalidaEnum } from '../../shared/enums/tipo-salida-enum';
+import { TipoCedulaEnum, TipoCedulaTexto, TipoMandamientoEnum, TipoMandamientoTexto, TipoSalidaEnum, TipoSalidaTexto } from '../../shared/enums/tipo-salida-enum';
 
 
 @Component({
@@ -31,17 +31,15 @@ export class IngresoDespachoComponent {
     this.subtipoSalidaOutput.emit(this.subtipoSalida);
   }
 
-  seleccionTipoSalida(tipo : number, subtipo : number){
-      if(tipo == 0) // Cedula
-      {
-        this.tipoSalida = TipoSalidaEnum.Cedula;
-        this.subtipoSalida = TipoCedulaEnum[subtipo];
-        this.textoSalida = 'Cédula ' + this.subtipoSalida
-      }else 
-      {
-        this.tipoSalida = TipoSalidaEnum.Mandamiento;
-        this.subtipoSalida = TipoMandamientoEnum[subtipo];
-        this.textoSalida = 'Mandamiento ' + this.subtipoSalida
-      }
+  seleccionTipoSalida(tipo: number, subtipo: number) {
+    if (tipo === 0) { // Cédula
+      this.tipoSalida = TipoSalidaEnum.Cedula;
+      this.subtipoSalida = subtipo;
+      this.textoSalida = TipoSalidaTexto[this.tipoSalida] + ' - ' + TipoCedulaTexto[subtipo as TipoCedulaEnum];
+    } else {
+      this.tipoSalida = TipoSalidaEnum.Mandamiento;
+      this.subtipoSalida = subtipo;
+      this.textoSalida = TipoSalidaTexto[this.tipoSalida] + ' - ' + TipoMandamientoTexto[subtipo as TipoMandamientoEnum];
+    }
   }
 }

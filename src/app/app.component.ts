@@ -21,8 +21,8 @@ import { TipoSalidaEnum } from '../shared/enums/tipo-salida-enum';
 export class AppComponent {
   faGavel = faGavel;
   faRepeat = faRepeat;
-  step : TipoStepEnum = TipoStepEnum.Inicio;
-  textoPrimerDespacho : string = '';
+  step : TipoStepEnum = TipoStepEnum.SeleccionSalida;
+  textoDespacho : string = '';
   tipoSalida = TipoSalidaEnum.SinAsignar;
   subtipoSalida : any;
   salida : Salida = new Salida();
@@ -31,13 +31,13 @@ export class AppComponent {
   {
     if (event.length > 0)
     {
-      this.textoPrimerDespacho = event;
+      this.textoDespacho = event;
     }
   }
 
   onTipoSalidaSeleccionado(event : TipoSalidaEnum)
   {
-    if (this.textoPrimerDespacho.length > 0)
+    if (this.textoDespacho.length > 0)
     {
       this.tipoSalida = event;
     }
@@ -45,7 +45,7 @@ export class AppComponent {
 
   onSubtipoSalidaSeleccionado(event : any)
   {
-    if (this.textoPrimerDespacho.length > 0 && this.tipoSalida != TipoSalidaEnum.SinAsignar)
+    if (this.textoDespacho.length > 0 && this.tipoSalida != TipoSalidaEnum.SinAsignar)
     {
       this.subtipoSalida = event;
       this.step = TipoStepEnum.SeleccionSalida;
@@ -62,7 +62,7 @@ export class AppComponent {
   onReingresar() 
   {
     this.step = TipoStepEnum.Inicio;
-    this.textoPrimerDespacho = '';
+    this.textoDespacho = '';
     this.salida = new Salida();
   }
 }

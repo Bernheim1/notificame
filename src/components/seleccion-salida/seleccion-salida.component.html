@@ -1,32 +1,10 @@
-<div class="p-5 mb-4 bg-light rounded-3 border border-2 border-primary shadow">
-    <div class="row">
-        <div class="col-md-6 m--1">
-            <div class="d-flex flex-column rounded-3 p-4 border border-2" role="button"
-                [ngClass]="this.tipoSalida == 1 ? 'border-primary' : 'border-secondary'" (click)="this.tipoSalida = 1">
-                <div class="row">
-                    <h2>Cédula de traslado de demanda</h2>
-                    <p>Swap the background-color utility and add a `.text-*` color utility to mix up the jumbotron look.
-                        Then, mix and match with additional component themes and more.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 m--1">
-            <div class="d-flex flex-column rounded-3 p-4 border border-2" role="button"
-                [ngClass]="this.tipoSalida == 2 ? 'border-primary' : 'border-secondary'" (click)="this.tipoSalida = 2">
-                <div class="row">
-                    <h2>Mandamiento</h2>
-                    <p>Swap the background-color utility and add a `.text-*` color utility to mix up the jumbotron look.
-                        Then, mix and match with additional component themes and more.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-12 mt-4 scale-up-ver-top " *ngIf="this.tipoSalida != 0">
+<div class="p-5 bg-light rounded-3 border border-2 border-primary shadow">
+    <div class="col-md-12 scale-up-ver-top ">
         <form [formGroup]="formulario" (ngSubmit)="onSubmit()">
         <div class="container">
             <div class="d-flex align-items-center justify-content-center mb-2">
                 <fa-icon style="font-size: 1.7rem; color: var(--bs-primary)" [icon]="faCircleInfo"></fa-icon>&nbsp;&nbsp;
-                <h3 class="">Información de su <span class="subrayado">{{this.tipoSalida == 1 ? 'Cédula' : 'Mandamiento'}}</span></h3>
+                <h3 class="">Información de su <span class="subrayado">{{this.textoTitulo}}</span></h3>
             </div>
             <div class="row">
                 <div class="col-md-6 col-xs-12">
@@ -293,12 +271,10 @@
                     </div>
                 </div>
             </div>
-            <div class="row mt-3 px-3">
-                <button class="btn btn-outline-primary w-100" type="submit">
-                    Generar <span class="font-bold">{{this.tipoSalida == 1 ? 'Cédula' : 'Mandamiento'}}</span>
-                  </button>
-            </div>
         </div>
     </form>
     </div>
 </div>
+<button class="btn btn-primary btn-generar-flotante" type="submit" (click)="onSubmit()">
+  Generar <span class="fw-bold">{{ this.tipoSalida == 1 ? 'Cédula' : 'Mandamiento' }}</span>
+</button>

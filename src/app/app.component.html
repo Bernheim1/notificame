@@ -1,32 +1,35 @@
 <div class="container py-4">
-  <header class="mb-4 border-bottom">
-    <div class="row">
-      <div class="col-6">
-        <div class="d-flex align-items-center text-dark text-decoration-none brand-logo">
-          <fa-icon [icon]="faGavel" class="logo-icon"></fa-icon>
-          <div class="ms-2">
-            <div class="brand-title">Confront<span class="brand-ia">IA</span></div>
-            <div class="brand-subtitle">Automatización Legal Inteligente</div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6">
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end align-items-center" *ngIf="this.step != 0">
-          <button class="btn btn-outline-primary me-md-2" type="button" (click)="onReingresar()">
-            Reingresar
-            <fa-icon [icon]="faRepeat"></fa-icon>
-          </button>
+<header class="mb-4 border-bottom">
+  <div class="row">
+    <!-- Logo Section -->
+    <div class="col-12 col-md-6">
+      <div class="d-flex align-items-center text-dark text-decoration-none brand-logo justify-content-center justify-content-md-start">
+        <fa-icon [icon]="faGavel" class="logo-icon"></fa-icon>
+        <div class="ms-2 text-center text-md-start">
+          <div class="brand-title">Confront<span class="brand-ia">IA</span></div>
+          <div class="brand-subtitle">Automatización Legal Inteligente</div>
         </div>
       </div>
     </div>
-  </header>
+
+    <!-- Button Section (Visible when step != 0) -->
+    <div class="col-12 col-md-6">
+      <div class="d-flex justify-content-center justify-content-md-end align-items-center" *ngIf="this.step != 0">
+        <button class="btn btn-outline-primary" type="button" (click)="onReingresar()">
+          Reingresar
+          <fa-icon [icon]="faRepeat"></fa-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
 
   <div *ngIf="this.step == 0">
     <app-ingreso-despacho (textoIngresado)="onTextoIngresado($event)" (tipoSalidaOutput)="onTipoSalidaSeleccionado($event)" (subtipoSalidaOutput)="onSubtipoSalidaSeleccionado($event)"></app-ingreso-despacho>
   </div>
 
   <div *ngIf="this.step == 1">
-    <app-seleccion-salida (salidaSeleccionada)="onSalidaSeleccionada($event)"></app-seleccion-salida>
+    <app-seleccion-salida (salidaSeleccionada)="onSalidaSeleccionada($event)" [textoDespacho]="this.textoDespacho" [tipoSalida]="this.tipoSalida" [subtipoSalida]="this.subtipoSalida"></app-seleccion-salida>
   </div>
 
   <div *ngIf="this.step == 2">
