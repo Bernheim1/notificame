@@ -22,11 +22,23 @@ export class SeleccionSalidaComponent {
   @Input() textoDespacho : string = '';
   @Input() tipoSalida : TipoSalidaEnum = TipoSalidaEnum.SinAsignar;
   @Input() subtipoSalida : any;
-  formulario: FormGroup;
+  formulario!: FormGroup;
   textoTitulo = '';
 
-  constructor(private fb: FormBuilder, private despachoService : DespachoService) {
-    this.formulario = this.fb.group({
+  constructor(private fb: FormBuilder, private despachoService : DespachoService) {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['tipoSalida'] || changes['subtipoSalida']) {
+      this.textoTitulo = TipoSalidaTexto[this.tipoSalida] + ' - ' + 
+                         (this.tipoSalida == 1 ? 
+                            TipoCedulaTexto[this.subtipoSalida as TipoCedulaEnum] : 
+                            TipoMandamientoTexto[this.subtipoSalida as TipoMandamientoEnum]);
+
+    }
+  }
+
+  ngOnInit(): void {
+        this.formulario = this.fb.group({
       organo: this.fb.group({
         organo: ['', [Validators.required]],
         juzgadoInterviniente: ['', [Validators.required]],
@@ -65,60 +77,40 @@ export class SeleccionSalidaComponent {
         otros: [false, [Validators.required]],
       }),
     });
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['tipoSalida'] || changes['subtipoSalida']) {
-      this.textoTitulo = TipoSalidaTexto[this.tipoSalida] + ' - ' + 
-                         (this.tipoSalida == 1 ? 
-                            TipoCedulaTexto[this.subtipoSalida as TipoCedulaEnum] : 
-                            TipoMandamientoTexto[this.subtipoSalida as TipoMandamientoEnum]);
-
-    }
-  }
-
-  ngOnInit(): void {
+    
     // Llamada al servicio para procesar el despacho
     let datos = this.despachoService.procesarDespacho(this.textoDespacho, this.tipoSalida, this.subtipoSalida);
     
     // Mapear los datos extraídos del despacho a los controles del formulario
     this.formulario.patchValue({
       organo: {
-        organo: 'Poder Judicial Provincia de Buenos Aires', // Estos valores deberían estar en el despacho o ser estáticos
-        juzgadoInterviniente: datos.juzgadoInterviniente,  // Mapear el juzgado extraído
-        juzgadoTribunal: datos.juzgadoTribunal,            // Mapear el tribunal extraído
-        direccionJuzgado: datos.direccionJuzgado           // Dirección extraída del despacho
-      },
-      domicilioRequerido: {
-        localidad: datos.localidad,
-        domicilio: datos.domicilio,
-        nro: datos.nro,
-        piso: datos.piso,
-        depto: datos.depto,
-        unidad: datos.unidad
+        organo: datos.organo.organo, // Estos valores deberían estar en el despacho o ser estáticos
+        juzgadoInterviniente: datos.organo.juzgadoInterviniente,  // Mapear el juzgado extraído
+        juzgadoTribunal: datos.organo.juzgadoTribunal,            // Mapear el tribunal extraído
+        direccionJuzgado: datos.organo.direccionJuzgado           // Dirección extraída del despacho
       },
       expediente: {
-        tipoDiligencia: datos.tipoDiligencia,
-        caratulaExpediente: datos.caratulaExpediente,
-        copiasTraslado: datos.copiasTraslado
+        tipoDiligencia: datos.expediente.tipoDiligencia,
+        caratulaExpediente: datos.expediente.caratulaExpediente,
+        copiasTraslado: datos.expediente.copiasTraslado
       },
       caracter: {
-        urgente: datos.urgente,
-        habilitacionDiaHora: datos.habilitacionDiaHora,
-        bajoResponsabilidad: datos.bajoResponsabilidad
+        urgente: datos.caracter.urgente,
+        habilitacionDiaHora: datos.caracter.habilitacionDiaHora,
+        bajoResponsabilidad: datos.caracter.bajoResponsabilidad
       },
       tipoDomicilio: {
-        denunciado: datos.denunciado,
-        constituido: datos.constituido
+        denunciado: datos.tipoDomicilio.denunciado,
+        constituido: datos.tipoDomicilio.constituido
       },
       facultadesAtribuciones: {
-        allanamiento: datos.allanamiento,
-        allanamientoDomicilioSinOcupantes: datos.allanamientoDomicilioSinOcupantes,
-        auxilioFuerzaPublica: datos.auxilioFuerzaPublica,
-        conCerrajero: datos.conCerrajero,
-        denunciaOtroDomicilio: datos.denunciaOtroDomicilio,
-        denunciaBienes: datos.denunciaBienes,
-        otros: datos.otros
+        allanamiento: datos.facultadesAtribuciones.allanamiento,
+        allanamientoDomicilioSinOcupantes: datos.facultadesAtribuciones.allanamientoDomicilioSinOcupantes,
+        auxilioFuerzaPublica: datos.facultadesAtribuciones.auxilioFuerzaPublica,
+        conCerrajero: datos.facultadesAtribuciones.conCerrajero,
+        denunciaOtroDomicilio: datos.facultadesAtribuciones.denunciaOtroDomicilio,
+        denunciaBienes: datos.facultadesAtribuciones.denunciaBienes,
+        otros: datos.facultadesAtribuciones.otros
       }
     });
   }

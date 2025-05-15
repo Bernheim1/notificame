@@ -10,18 +10,17 @@ export class DespachoService {
   // Función que procesa el primer despacho
   procesarDespacho(despachoTexto: string, tipoSalida: TipoSalidaEnum, subtipoSalida : any): any {
     if (tipoSalida === TipoSalidaEnum.Mandamiento) {
-      return this.generarMandamiento(despachoTexto);
+      return this.generarMandamiento(despachoTexto, subtipoSalida);
     } else {
-      return this.generarCedula(despachoTexto);
+      return this.generarCedula(despachoTexto, subtipoSalida);
     }
   }
 
   // Generar el mandamiento con los datos extraídos
-  private generarMandamiento(despachoTexto: string): any {
+  private generarMandamiento(despachoTexto: string, subtipoSalida : any): any {
     return {
       organo: this.extraerJuzgado(despachoTexto),
       expediente: this.extraerExpediente(despachoTexto),
-      domicilioRequerido: this.extraerDomicilio(despachoTexto),
       caracter: this.extraerCaracter(despachoTexto),
       tipoDomicilio: this.extraerTipoDomicilio(despachoTexto),
       facultadesAtribuciones: this.extraerFacultades(despachoTexto),
@@ -29,7 +28,7 @@ export class DespachoService {
   }
 
   // Generar la cédula con los datos extraídos (puedes crear otra lógica para la cédula)
-  private generarCedula(despachoTexto: string): any {
+  private generarCedula(despachoTexto: string, subtipoSalida : any): any {
     // return {
     //   tipo: 'cedula',
     //   montoCapital: datos.montoCapital,
@@ -41,64 +40,61 @@ export class DespachoService {
   }
 
     // Función para extraer la información del juzgado
-  private extraerJuzgado(despachoTexto: string) {
-    const juzgadoRegex = /Juzgado Civil y Comercial N° (\d+).*\n(.*)/;
-    const matches = despachoTexto.match(juzgadoRegex);
-    if (matches) {
+    extraerJuzgado(despachoTexto: string): {
+      organo: string;
+      juzgadoInterviniente: string;
+      juzgadoTribunal: string;
+      direccionJuzgado: string;
+    } {
+      const lineas = despachoTexto.split('\n').map(linea => linea.trim()).filter(Boolean);
+
+      // Buscamos la última línea que tenga la palabra "juzgado"
+      const lineaJuzgado = [...lineas].reverse().find(linea =>
+        /juzgado.*n.?º?\s*\d+/i.test(linea)
+      );
+
+      const juzgadoLimpio = lineaJuzgado ? this.capitalizarFrase(lineaJuzgado.toLowerCase()) : '';
+
       return {
-        organo: 'Poder Judicial Provincia de Buenos Aires',
-        juzgadoInterviniente: matches[1], // N° Juzgado
-        juzgadoTribunal: matches[2].trim(), // Nombre del juzgado
-        direccionJuzgado: '9 de Julio Nº 287, 3 piso- Quilmes', // Dirección fija o extraída si está en el texto
+        organo: '',
+        juzgadoInterviniente: juzgadoLimpio,
+        juzgadoTribunal: juzgadoLimpio,
+        direccionJuzgado: ''
       };
     }
-    return {
-      organo: '',
-      juzgadoInterviniente: '',
-      juzgadoTribunal: '',
-      direccionJuzgado: '',
-    };
-  }
+
+    private capitalizarFrase(texto: string): string {
+      return texto.replace(/\b\w+/g, palabra =>
+        palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
+      );
+    }
 
   // Función para extraer la información del expediente
-  private extraerExpediente(despachoTexto: string) {
-    const expedienteRegex = /EXPTE: (\d+)\s+([^\n]+)/;
-    const matches = despachoTexto.match(expedienteRegex);
-    if (matches) {
-      return {
-        tipoDiligencia: 'Mandamiento de Intimación de Pago', // Este valor se puede extraer o definir
-        caratulaExpediente: matches[2].trim(), // Carátula del expediente
-        copiasTraslado: true, // Lo asumimos como true en este caso o se podría extraer
-      };
-    }
-    return {
-      tipoDiligencia: '',
-      caratulaExpediente: '',
-      copiasTraslado: false,
-    };
-  }
+  private extraerExpediente(texto: string){
+    // 1. Carátula
+    let caratulaMatch = texto.match(/CARATULA:\s*(.*)/i);
+    let caratulaExpediente = caratulaMatch ? caratulaMatch[1].trim() : '';
 
-  // Función para extraer el domicilio requerido
-  private extraerDomicilio(despachoTexto: string) {
-    const domicilioRegex = /Domicilio:\s*(.*)\s+Nro:\s*(\d+)\s*(Piso:\s*(\d+))?/;
-    const matches = despachoTexto.match(domicilioRegex);
-    if (matches) {
-      return {
-        localidad: 'Florencio Varela', // Extraído o definido
-        domicilio: matches[1]?.trim() || '',
-        nro: matches[2]?.trim() || '',
-        piso: matches[4] || '',
-        depto: '', // Podríamos extraerlo si estuviera en el texto
-        unidad: '', // Puede ser extraído o definido
-      };
+    // 2. Tipo de diligencia
+    let diligenciaRegex = /líbrese\s+(mandamiento|cédula)[^\n.,;]*?(de[^.]+?remate|de[^.]+?\.)/i;
+    let diligenciaMatch = texto.match(diligenciaRegex);
+    let tipoDiligencia = '';
+    if (diligenciaMatch) {
+      tipoDiligencia =
+        diligenciaMatch[0]
+          .replace(/^líbrese\s+/i, '')  // quitar "líbrese"
+          .replace(/\s+contra.*$/i, '') // evitar que tome "contra Fulano"
+          .replace(/\.+$/, '')          // quitar puntos finales
+          .trim()
     }
+
+    // 3. Copias para traslado
+    let copiasTraslado = /con\s+copias|copias\s+para\s+traslado/i.test(texto);
+
     return {
-      localidad: '',
-      domicilio: '',
-      nro: '',
-      piso: '',
-      depto: '',
-      unidad: '',
+      tipoDiligencia,
+      caratulaExpediente,
+      copiasTraslado
     };
   }
 
