@@ -21,7 +21,7 @@ import { TipoSalidaEnum } from '../shared/enums/tipo-salida-enum';
 export class AppComponent {
   faGavel = faGavel;
   faRepeat = faRepeat;
-  step : TipoStepEnum = TipoStepEnum.SeleccionSalida;
+  step : TipoStepEnum = TipoStepEnum.Inicio;
   textoDespacho : string = '';
   tipoSalida = TipoSalidaEnum.SinAsignar;
   subtipoSalida : any;

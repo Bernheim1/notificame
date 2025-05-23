@@ -259,15 +259,33 @@
                         <div class="card-header d-flex justify-content-center align-items-center">
                             <h4>Contenido de su <span class="subrayado">{{this.tipoSalida == 1 ? 'Cédula' : 'Mandamiento'}}</span></h4>
                         </div>
-                        <div class="card-body fs-5 lh-5" style="text-align: justify;" id="editable-text">
+                        <div class="card-body fs-5 lh-5" style="text-align: justify;" id="editable-text" formGroupName="textoContenido">
                             El Oficial de Justicia de la zona que corresponda, se constituirá, para la ejecución del presente en el domicilio de 
-                            <span class="editable" contenteditable="true" appPreventEnter>HINTZ DAMIAN FERNANDO</span> 
+                            <span 
+                            class="editable"
+                            contenteditable="true"
+                            contenteditableModel
+                            formControlName="requerido"
+                            appPreventEnter>
+                            </span>
                             sito en calle y procederá a intimar para que de pago en el acto de serle requerida la suma de 
-                            <span class="editable" contenteditable="true" appPreventEnter>CINCUENTA Y DOS MIL SETECIENTOS TREINTA Y CUATRO CON CINCUENTA CENTAVOS</span> 
+                            <span 
+                            class="editable"
+                            contenteditable="true"
+                            contenteditableModel
+                            formControlName="montoCapitalTexto"
+                            appPreventEnter>
+                            </span> 
                             ($ 52.734,59) en concepto de capital, más la de 
-                            <span class="editable" contenteditable="true" appPreventEnter>PESOS VEINTISEIS MIL QUINIENTOS ($ 26.500,00)</span> 
+                            <span 
+                            class="editable"
+                            contenteditable="true"
+                            contenteditableModel
+                            formControlName="montoInteresesTexto"
+                            appPreventEnter>
+                            </span>
                             que el Juzgado presupuesto “prima facie” para responder intereses y costas de la ejecución. En caso de dar resultado negativo la intimación de pago, ello importará la citación a los ejecutados para oponer excepciones legítimas dentro del plazo de cinco días, bajo apercibimiento de llevarse adelante la ejecución (art. 540 CPC), como asimismo el requerimiento para que dentro de dicho plazo constituya domicilio legal bajo apercibimiento de tenerlo por constituido en los Estrados del Juzgado en los términos del art. 41 del Código Citado.
-                          </div>
+                        </div>
                     </div>
                 </div>
             </div>

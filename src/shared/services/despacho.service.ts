@@ -23,7 +23,8 @@ export class DespachoService {
       expediente: this.extraerExpediente(despachoTexto),
       caracter: this.extraerCaracter(despachoTexto),
       tipoDomicilio: this.extraerTipoDomicilio(despachoTexto),
-      facultadesAtribuciones: this.extraerFacultades(despachoTexto),
+      facultadesAtribuciones: this.extraerFacultadesAtribuciones(despachoTexto),
+      textoContenido: this.extraerTextoContenido(despachoTexto),
     };
   }
 
@@ -39,35 +40,35 @@ export class DespachoService {
     // };
   }
 
-    // Función para extraer la información del juzgado
-    extraerJuzgado(despachoTexto: string): {
-      organo: string;
-      juzgadoInterviniente: string;
-      juzgadoTribunal: string;
-      direccionJuzgado: string;
-    } {
-      const lineas = despachoTexto.split('\n').map(linea => linea.trim()).filter(Boolean);
+  // Función para extraer la información del juzgado
+  extraerJuzgado(despachoTexto: string): {
+    organo: string;
+    juzgadoInterviniente: string;
+    juzgadoTribunal: string;
+    direccionJuzgado: string;
+  } {
+    const lineas = despachoTexto.split('\n').map(linea => linea.trim()).filter(Boolean);
 
-      // Buscamos la última línea que tenga la palabra "juzgado"
-      const lineaJuzgado = [...lineas].reverse().find(linea =>
-        /juzgado.*n.?º?\s*\d+/i.test(linea)
-      );
+    // Buscamos la última línea que tenga la palabra "juzgado"
+    const lineaJuzgado = [...lineas].reverse().find(linea =>
+      /juzgado.*n.?º?\s*\d+/i.test(linea)
+    );
 
-      const juzgadoLimpio = lineaJuzgado ? this.capitalizarFrase(lineaJuzgado.toLowerCase()) : '';
+    const juzgadoLimpio = lineaJuzgado ? this.capitalizarFrase(lineaJuzgado.toLowerCase()) : '';
 
-      return {
-        organo: '',
-        juzgadoInterviniente: juzgadoLimpio,
-        juzgadoTribunal: juzgadoLimpio,
-        direccionJuzgado: ''
-      };
-    }
+    return {
+      organo: '',
+      juzgadoInterviniente: juzgadoLimpio,
+      juzgadoTribunal: juzgadoLimpio,
+      direccionJuzgado: ''
+    };
+  }
 
-    private capitalizarFrase(texto: string): string {
-      return texto.replace(/\b\w+/g, palabra =>
-        palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
-      );
-    }
+  private capitalizarFrase(texto: string): string {
+    return texto.replace(/\b\w+/g, palabra =>
+      palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase()
+    );
+  }
 
   // Función para extraer la información del expediente
   private extraerExpediente(texto: string){
@@ -99,45 +100,84 @@ export class DespachoService {
   }
 
   // Función para extraer la parte de "carácter" (urgente, habilitación de día y hora, etc.)
-  private extraerCaracter(despachoTexto: string) {
-    const urgenteRegex = /URGENTE/;
-    const habilitacionRegex = /habilitación de día y hora/;
-    const bajoResponsabilidadRegex = /bajo responsabilidad/;
+  private extraerCaracter(texto: string): {
+    urgente: boolean;
+    habilitacionDiaHora: boolean;
+    bajoResponsabilidad: boolean;
+  } {
+    const urgente = /\b(urgente|urgentemente|con carácter de urgente)\b/i.test(texto);
+    const habilitacionDiaHora = /\b(habilitación (de )?d[ií]as y horas|habilítese d[ií]a y hora)\b/i.test(texto);
+    const bajoResponsabilidad = /\b(bajo (exclusiva )?responsabilidad)\b/i.test(texto);
 
     return {
-      urgente: urgenteRegex.test(despachoTexto),
-      habilitacionDiaHora: habilitacionRegex.test(despachoTexto),
-      bajoResponsabilidad: bajoResponsabilidadRegex.test(despachoTexto),
+      urgente,
+      habilitacionDiaHora,
+      bajoResponsabilidad
     };
   }
 
   // Función para extraer el tipo de domicilio (denunciado, constituido)
-  private extraerTipoDomicilio(despachoTexto: string) {
-    const denunciadoRegex = /denunciado/;
-    const constituidoRegex = /constituido/;
+  extraerTipoDomicilio(texto: string): {
+    denunciado: boolean;
+    constituido: boolean;
+  } {
+    const denunciado = /\b(domicilio denunciado|domicilio que denunciare|domicilio del requerido|domicilio real)\b/i.test(texto);
+    const constituido = /\b(domicilio constituido|constituyó domicilio|domicilio procesal|constituido en autos)\b/i.test(texto);
 
     return {
-      denunciado: denunciadoRegex.test(despachoTexto),
-      constituido: constituidoRegex.test(despachoTexto),
+      denunciado,
+      constituido
     };
   }
 
   // Función para extraer las facultades y atribuciones (allanamiento, auxilio fuerza pública, etc.)
-  private extraerFacultades(despachoTexto: string) {
-    const allanamientoRegex = /allanamiento/;
-    const auxilioFuerzaPublicaRegex = /auxilio de la fuerza pública/;
-    const conCerrajeroRegex = /con cerrajero/;
-    const denunciaOtroDomicilioRegex = /denuncia otro domicilio/;
-    const denunciaBienesRegex = /denuncia bienes/;
+  extraerFacultadesAtribuciones(texto: string): {
+    allanamiento: boolean;
+    allanamientoDomicilioSinOcupantes: boolean;
+    auxilioFuerzaPublica: boolean;
+    conCerrajero: boolean;
+    denunciaOtroDomicilio: boolean;
+    denunciaBienes: boolean;
+    otros: boolean;
+  } {
+    const allanamiento = /allanamiento del domicilio|facúltese.*allanamiento|autorícese.*allanamiento/i.test(texto);
+    const allanamientoDomicilioSinOcupantes = /inmueble.*desocupado|sin ocupantes|aunque no haya ocupantes/i.test(texto);
+    const auxilioFuerzaPublica = /fuerza pública|intervención policial|pudiendo requerir fuerza pública/i.test(texto);
+    const conCerrajero = /con cerrajero|uso de cerrajero|valerse de cerrajero/i.test(texto);
+    const denunciaOtroDomicilio = /denuncie otro domicilio|otro domicilio que se denunciare/i.test(texto);
+    const denunciaBienes = /denuncie bienes|denunciar bienes|facúltese.*denunciar bienes/i.test(texto);
+
+    // Detectar "otros" si se menciona "facúltese" o "autorícese" pero no cae en ninguno de los casos anteriores
+    const algunaFacultad = /facúltese|autorícese/i.test(texto);
+    const algunaDetectada = allanamiento || allanamientoDomicilioSinOcupantes || auxilioFuerzaPublica || conCerrajero || denunciaOtroDomicilio || denunciaBienes;
+    const otros = algunaFacultad && !algunaDetectada;
 
     return {
-      allanamiento: allanamientoRegex.test(despachoTexto),
-      allanamientoDomicilioSinOcupantes: false, // Podría adaptarse si es relevante
-      auxilioFuerzaPublica: auxilioFuerzaPublicaRegex.test(despachoTexto),
-      conCerrajero: conCerrajeroRegex.test(despachoTexto),
-      denunciaOtroDomicilio: denunciaOtroDomicilioRegex.test(despachoTexto),
-      denunciaBienes: denunciaBienesRegex.test(despachoTexto),
-      otros: false, // Puede ser adaptado si hay más casos
+      allanamiento,
+      allanamientoDomicilioSinOcupantes,
+      auxilioFuerzaPublica,
+      conCerrajero,
+      denunciaOtroDomicilio,
+      denunciaBienes,
+      otros
     };
   }
+
+  private extraerTextoContenido(texto: string) {
+    const nombreMatch = texto.match(/contra\s+([A-ZÁÉÍÓÚÑ\s]+),?\s+por la suma/i);
+    const montoLetrasMatch = texto.match(/por la suma de\s+([A-Z\sÁÉÍÓÚÑ]+)\s+\(\$\s*[\d.,]+\)/i);
+    const montoNumericoMatch = texto.match(/por la suma de\s+[A-Z\sÁÉÍÓÚÑ]+\s+\(\$\s*([\d.,]+)\)/i);
+    const interesesLetrasMatch = texto.match(/más la de\s+([A-Z\sÁÉÍÓÚÑ]+)\s+\(\$\s*[\d.,]+\)/i);
+    const interesesNumericoMatch = texto.match(/más la de\s+[A-Z\sÁÉÍÓÚÑ]+\s+\(\$\s*([\d.,]+)\)/i);
+
+    return {
+      requerido: nombreMatch ? nombreMatch[1].trim() : 'NOMBRE REQUERIDO',
+      montoCapitalTexto: montoLetrasMatch ? montoLetrasMatch[1].trim() : 'MONTO CAPITAL',
+      montoCapitalNumerico: montoNumericoMatch ? montoNumericoMatch[1].replace(/\./g, '').replace(',', '.') : '',
+      montoInteresesTexto: interesesLetrasMatch ? interesesLetrasMatch[1].trim() : 'MONTO INTERESES',
+      montoInteresesNumerico: interesesNumericoMatch ? interesesNumericoMatch[1].replace(/\./g, '').replace(',', '.') : ''
+    };
+  }
+
+
 }

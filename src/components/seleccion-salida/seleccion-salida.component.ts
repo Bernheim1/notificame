@@ -7,11 +7,12 @@ import { Salida } from '../../shared/models/salida';
 import { TipoCedulaEnum, TipoCedulaTexto, TipoMandamientoEnum, TipoMandamientoTexto, TipoSalidaEnum, TipoSalidaTexto } from '../../shared/enums/tipo-salida-enum';
 import { PreventEnterDirective } from '../../shared/directives/prevent-enter.directive';
 import { DespachoService } from '../../shared/services/despacho.service';
+import { ContenteditableValueAccessorDirective } from '../../shared/directives/content-editable-model.directive';
 
 @Component({
   selector: 'app-seleccion-salida',
   standalone: true,
-  imports: [CommonModule, FormsModule ,FontAwesomeModule, ReactiveFormsModule, PreventEnterDirective],
+  imports: [CommonModule, FormsModule ,FontAwesomeModule, ReactiveFormsModule, PreventEnterDirective, ContenteditableValueAccessorDirective],
   templateUrl: './seleccion-salida.component.html',
   styleUrl: './seleccion-salida.component.scss'
 })
@@ -76,6 +77,13 @@ export class SeleccionSalidaComponent {
         denunciaBienes: [false, [Validators.required]],
         otros: [false, [Validators.required]],
       }),
+      textoContenido: this.fb.group({
+        requerido: ['', [Validators.required, Validators.minLength(3)]],
+        montoCapitalTexto: ['', [Validators.required, Validators.minLength(3)]],
+        montoCapitalNumerico: ['', [Validators.required, Validators.minLength(3)]],
+        montoInteresesTexto: ['', [Validators.required, Validators.minLength(3)]],
+        montoInteresesNumerico: ['', [Validators.required, Validators.minLength(3)]],
+      }),
     });
     
     // Llamada al servicio para procesar el despacho
@@ -111,6 +119,13 @@ export class SeleccionSalidaComponent {
         denunciaOtroDomicilio: datos.facultadesAtribuciones.denunciaOtroDomicilio,
         denunciaBienes: datos.facultadesAtribuciones.denunciaBienes,
         otros: datos.facultadesAtribuciones.otros
+      },
+      textoContenido: {
+        requerido: datos.textoContenido.requerido,
+        montoCapitalTexto: datos.textoContenido.montoCapitalTexto,
+        montoCapitalNumerico: datos.textoContenido.montoCapitalNumerico,
+        montoInteresesTexto: datos.textoContenido.montoInteresesTexto,
+        montoInteresesNumerico: datos.textoContenido.montoInteresesNumerico,
       }
     });
   }
