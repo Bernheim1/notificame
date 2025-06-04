@@ -40,26 +40,26 @@ export class DespachoService {
     // };
   }
 
-  // Función para extraer la información del juzgado
   extraerJuzgado(despachoTexto: string): {
     organo: string;
     juzgadoInterviniente: string;
     juzgadoTribunal: string;
     direccionJuzgado: string;
   } {
-    const lineas = despachoTexto.split('\n').map(linea => linea.trim()).filter(Boolean);
+    let lineas = despachoTexto.split('\n').map(linea => linea.trim()).filter(Boolean);
+    let juzgadoInterviniente = '';
 
-    // Buscamos la última línea que tenga la palabra "juzgado"
-    const lineaJuzgado = [...lineas].reverse().find(linea =>
-      /juzgado.*n.?º?\s*\d+/i.test(linea)
-    );
-
-    const juzgadoLimpio = lineaJuzgado ? this.capitalizarFrase(lineaJuzgado.toLowerCase()) : '';
+    // Buscar línea con "Juzgado"
+    for (let linea of lineas) {
+      if (/juzgado.*n.?º?\s*\d+/i.test(linea)) {
+        juzgadoInterviniente = this.capitalizarFrase(linea.toLowerCase());
+      }
+    }
 
     return {
       organo: '',
-      juzgadoInterviniente: juzgadoLimpio,
-      juzgadoTribunal: juzgadoLimpio,
+      juzgadoInterviniente: juzgadoInterviniente,
+      juzgadoTribunal: juzgadoInterviniente,
       direccionJuzgado: ''
     };
   }
@@ -70,10 +70,9 @@ export class DespachoService {
     );
   }
 
-  // Función para extraer la información del expediente
-  private extraerExpediente(texto: string){
+  private extraerExpediente(texto: string) {
     // 1. Carátula
-    let caratulaMatch = texto.match(/CARATULA:\s*(.*)/i);
+    let caratulaMatch = texto.match(/CARATULA:\s*(.+?)\s+EXPTE:/i);
     let caratulaExpediente = caratulaMatch ? caratulaMatch[1].trim() : '';
 
     // 2. Tipo de diligencia
@@ -83,10 +82,10 @@ export class DespachoService {
     if (diligenciaMatch) {
       tipoDiligencia =
         diligenciaMatch[0]
-          .replace(/^líbrese\s+/i, '')  // quitar "líbrese"
-          .replace(/\s+contra.*$/i, '') // evitar que tome "contra Fulano"
-          .replace(/\.+$/, '')          // quitar puntos finales
-          .trim()
+          .replace(/^líbrese\s+/i, '')
+          .replace(/\s+contra.*$/i, '')
+          .replace(/\.+$/, '')
+          .trim();
     }
 
     // 3. Copias para traslado
@@ -99,15 +98,14 @@ export class DespachoService {
     };
   }
 
-  // Función para extraer la parte de "carácter" (urgente, habilitación de día y hora, etc.)
   private extraerCaracter(texto: string): {
     urgente: boolean;
     habilitacionDiaHora: boolean;
     bajoResponsabilidad: boolean;
   } {
-    const urgente = /\b(urgente|urgentemente|con carácter de urgente)\b/i.test(texto);
-    const habilitacionDiaHora = /\b(habilitación (de )?d[ií]as y horas|habilítese d[ií]a y hora)\b/i.test(texto);
-    const bajoResponsabilidad = /\b(bajo (exclusiva )?responsabilidad)\b/i.test(texto);
+    let urgente = /\b(urgente|urgentemente|con carácter de urgente|trámite urgente)\b/i.test(texto);
+    let habilitacionDiaHora = /\b(habilitación (de )?d[ií]as y horas|habilítese d[ií]a y hora|habilitando d[ií]a y hora)\b/i.test(texto);
+    let bajoResponsabilidad = /\b(bajo (exclusiva )?responsabilidad|bajo su responsabilidad|bajo responsabilidad de la parte)\b/i.test(texto);
 
     return {
       urgente,
@@ -164,11 +162,11 @@ export class DespachoService {
   }
 
   private extraerTextoContenido(texto: string) {
-    const nombreMatch = texto.match(/contra\s+([A-ZÁÉÍÓÚÑ\s]+),?\s+por la suma/i);
-    const montoLetrasMatch = texto.match(/por la suma de\s+([A-Z\sÁÉÍÓÚÑ]+)\s+\(\$\s*[\d.,]+\)/i);
-    const montoNumericoMatch = texto.match(/por la suma de\s+[A-Z\sÁÉÍÓÚÑ]+\s+\(\$\s*([\d.,]+)\)/i);
-    const interesesLetrasMatch = texto.match(/más la de\s+([A-Z\sÁÉÍÓÚÑ]+)\s+\(\$\s*[\d.,]+\)/i);
-    const interesesNumericoMatch = texto.match(/más la de\s+[A-Z\sÁÉÍÓÚÑ]+\s+\(\$\s*([\d.,]+)\)/i);
+    let nombreMatch = texto.match(/contra\s+([A-ZÁÉÍÓÚÑ\s]+),?\s+por la suma/i);
+    let montoLetrasMatch = texto.match(/por la suma de\s+([A-Z\sÁÉÍÓÚÑ]+)\s+\(\$\s*[\d.,]+\)/i);
+    let montoNumericoMatch = texto.match(/por la suma de\s+[A-Z\sÁÉÍÓÚÑ]+\s+\(\$\s*([\d.,]+)\)/i);
+    let interesesLetrasMatch = texto.match(/más la de\s+([A-Z\sÁÉÍÓÚÑ]+)\s+\(\$\s*[\d.,]+\)/i);
+    let interesesNumericoMatch = texto.match(/más la de\s+[A-Z\sÁÉÍÓÚÑ]+\s+\(\$\s*([\d.,]+)\)/i);
 
     return {
       requerido: nombreMatch ? nombreMatch[1].trim() : 'NOMBRE REQUERIDO',
