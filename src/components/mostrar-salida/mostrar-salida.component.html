@@ -1,121 +1,20 @@
-<div class="p-5 mb-4 bg-light rounded-3 border border-2 border-primary shadow">
-    <h2 class="fw-bold mb-3">Estos son los datos de su <span class="subrayado">{{this.salida.tipoSalida == 1 ? 'Cédula' : 'Mandamiento'}}</span></h2>
-    <div class="card bg-light rounded-3 border border-2 border-primary shadow mb-3">
-        <div class="card-header d-flex p-2">
-          <fa-icon size="2x" class="text-primary" [icon]="faHouse"></fa-icon>
-          <h4 class="ms-2 mt-1">Domicilio</h4>
+<div class="p-5 mb-4 bg-light rounded-3 border border-2 border-primary shadow scale-up-ver-top">
+  <div class="container-fluid">
+    <h1 class="display-5 fw-bold">Su <span class="subrayado">mandamiento</span> esta listo<span class="brand-ia">!</span></h1>
+
+    <textarea [(ngModel)]="textoTerminado" class="form-control" id="exampleFormControlTextarea1" rows="20"></textarea>
+
+    <!-- Responsive buttons -->
+    <div class="d-flex flex-column flex-sm-column flex-md-row justify-content-center align-items-stretch align-items-md-center mt-3">
+      <!-- Button -->
+       <div class="col-4"></div>
+       <div class="col-4">      
+          <button class="btn btn-outline-primary" type="button" style="min-width: 450px;">
+              Copiar
+              <fa-icon [icon]="faClone"></fa-icon>
+          </button>
         </div>
-        <div class="card-body">
-          <form [formGroup]="formulario" (ngSubmit)="onSubmit()" class="row g-3">
-            <div class="col-md-4">
-                <label class="form-label">Localidad</label>
-                <input type="text" placeholder="Localidad" class="form-control" formControlName="localidad">
-                <div class="text-danger" *ngIf="campoInvalido('localidad')">
-                    La localidad es obligatoria.
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <label class="form-label">Domicilio</label>
-                <input type="text" placeholder="Domicilio" class="form-control" formControlName="domicilio">
-                <div class="text-danger" *ngIf="campoInvalido('domicilio')">
-                    El domicilio es obligatorio.
-                </div>
-            </div>
-
-            <div class="col-md-1">
-                <label class="form-label">Nro</label>
-                <input type="text" placeholder="Nro" class="form-control" formControlName="nro">
-                <div class="text-danger" *ngIf="campoInvalido('nro')">
-                    Ingrese un número válido o "S/N".
-                </div>
-            </div>
-
-            <div class="col-md-1">
-                <label class="form-label">Piso</label>
-                <input type="number" placeholder="Piso" class="form-control" formControlName="piso" min="0"
-                    max="99">
-                <div class="text-danger" *ngIf="campoInvalido('piso')">
-                    El piso debe estar entre 0 y 99.
-                </div>
-            </div>
-
-            <div class="col-md-2">
-                <label class="form-label">Depto</label>
-                <input type="text" placeholder="Depto" class="form-control" formControlName="depto">
-                <div class="text-danger" *ngIf="campoInvalido('depto')">
-                  El departamento no es obligatorio.
-                </div>
-            </div>
-
-            <div class="col-md-1">
-                <label class="form-label">Unidad</label>
-                <input type="text" placeholder="Unidad" class="form-control" formControlName="unidad">
-            </div>
-        </form>
-        </div>
+       <div class="col-4"></div>
     </div>
-    <div class="card bg-light rounded-3 border border-2 border-primary shadow">
-      <div class="card-header d-flex p-2">
-        <fa-icon size="2x" class="text-primary" [icon]="faHouse"></fa-icon>
-        <h4 class="ms-2 mt-1">Datos</h4>
-      </div>
-      <div class="card-body">
-        <form [formGroup]="formulario" (ngSubmit)="onSubmit()">
-          <div class="row g-5">
-              <div class="col-md-3">
-                <div class="form-check form-switch">
-                  <label class="form-check-label" for="flexSwitchCheckChecked">Copias para traslado</label>
-                  <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked>
-                </div>
-            </div>
-            <div class="col-md-3">
-              <div class="form-check form-switch">
-                <label class="form-check-label" for="flexSwitchCheckChecked">Urgente</label>
-                <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="form-check form-switch">
-                <label class="form-check-label" for="flexSwitchCheckChecked">Y/O habilitacion de dia y hora</label>
-                <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="form-check form-switch">
-                <label class="form-check-label" for="flexSwitchCheckChecked">Firma Denunciado</label>
-                <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked>
-              </div>
-            </div>
-          </div>
-          <div class="row g-5">
-            <div class="col-md-3">
-              <div class="form-check form-switch">
-                <label class="form-check-label" for="flexSwitchCheckChecked">Firma Constituido</label>
-                <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked>
-              </div>
-          </div>
-          <div class="col-md-3">
-            <div class="form-check form-switch">
-              <label class="form-check-label" for="flexSwitchCheckChecked">Firma Bajo responsabilidad</label>
-              <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="form-check form-switch">
-              <label class="form-check-label" for="flexSwitchCheckChecked">asdasasasd</label>
-              <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="form-check form-switch">
-              <label class="form-check-label" for="flexSwitchCheckChecked">asdasasasd</label>
-              <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" checked>
-            </div>
-          </div>
-        </div>
-
-      </form>
-      </div>
   </div>
 </div>

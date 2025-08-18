@@ -4,18 +4,6 @@
     text-decoration-thickness: 4px; /* Opcional: grosor de la línea */
   }
 
-  .icon-list {
-    position: relative;
-    padding-left: 30px; /* Espacio para el ícono */
-  }
-  .icon-list i {
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-
-  .form-switch .form-check-input:checked {
-    background-color: var(--bs-primary);
-    border-color: var(--bs-primary);
+  .brand-ia {
+  color: var(--bs-primary);
   }

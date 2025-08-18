@@ -25,7 +25,7 @@
 </header>
 
   <div *ngIf="this.step == 0">
-    <app-ingreso-despacho (textoIngresado)="onTextoIngresado($event)" (tipoSalidaOutput)="onTipoSalidaSeleccionado($event)" (subtipoSalidaOutput)="onSubtipoSalidaSeleccionado($event)"></app-ingreso-despacho>
+    <app-ingreso-despacho class="scale-up-ver-top" (textoIngresado)="onTextoIngresado($event)" (tipoSalidaOutput)="onTipoSalidaSeleccionado($event)" (subtipoSalidaOutput)="onSubtipoSalidaSeleccionado($event)"></app-ingreso-despacho>
   </div>
 
   <div *ngIf="this.step == 1">

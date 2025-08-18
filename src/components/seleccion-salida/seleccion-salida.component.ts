@@ -78,17 +78,23 @@ export class SeleccionSalidaComponent {
         otros: [false, [Validators.required]],
       }),
       textoContenido: this.fb.group({
-        requerido: ['', [Validators.required, Validators.minLength(3)]],
-        montoCapitalTexto: ['', [Validators.required, Validators.minLength(3)]],
-        montoCapitalNumerico: ['', [Validators.required, Validators.minLength(3)]],
-        montoInteresesTexto: ['', [Validators.required, Validators.minLength(3)]],
-        montoInteresesNumerico: ['', [Validators.required, Validators.minLength(3)]],
+        requerido: [''],
+        montoCapitalTexto: [''],
+        montoCapitalNumerico: [''],
+        montoInteresesTexto: [''],
+        montoInteresesNumerico: [''],
+//         [Validators.required, Validators.minLength(3)]
+// [Validators.required, Validators.minLength(3)]
+// [Validators.required, Validators.minLength(3)]
+// [Validators.required, Validators.minLength(3)]
+// [Validators.required, Validators.minLength(3)]
       }),
     });
     
     // Llamada al servicio para procesar el despacho
     let datos = this.despachoService.procesarDespacho(this.textoDespacho, this.tipoSalida, this.subtipoSalida);
     
+
     // Mapear los datos extraídos del despacho a los controles del formulario
     this.formulario.patchValue({
       organo: {
@@ -133,13 +139,21 @@ export class SeleccionSalidaComponent {
   onSubmit() {
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
+
+      // Mostrar en consola qué controles son inválidos
+      Object.keys(this.formulario.controls).forEach(key => {
+        const control = this.formulario.get(key);
+        if (control?.invalid) {
+          console.log(`❌ Campo inválido: ${key}`, control.errors);
+        }
+      });
+
       return;
     }
 
-    console.log(this.formulario.value());
+    console.log(this.formulario.value);
 
     var retorno = this.mapSalida();
-
     this.salidaSeleccionada.emit(retorno);
   }
 
