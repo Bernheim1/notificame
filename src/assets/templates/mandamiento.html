@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mandamiento de Intimación</title>
+  <style>
+    body { font-family: "Times New Roman", Times, serif; line-height: 1.4; }
+    h1 { text-align: center; text-decoration: underline; }
+    .field { font-weight: bold; }
+    .section { margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <h1>MANDAMIENTO DE INTIMACIÓN DE PAGO</h1>
+
+  <div class="section">
+    <p>Ciudad: <span class="field">{{Ciudad}}</span></p>
+    <p>Fecha: <span class="field">{{Fecha}}</span></p>
+  </div>
+
+  <div class="section">
+    <p>Se intima a <span class="field">{{Nombre}}</span>, con domicilio en <span class="field">{{Domicilio}}</span>, al pago de la suma de <span class="field">{{Monto}}</span> correspondiente a la obligación pendiente.</p>
+  </div>
+
+  <div class="section">
+    <p>Plazo para cumplir: <span class="field">{{Plazo}}</span></p>
+    <p>Observaciones: <span class="field">{{Observaciones}}</span></p>
+  </div>
+
+  <div class="section">
+    <p>Atentamente,</p>
+    <p><span class="field">{{Firma}}</span></p>
+  </div>
+</body>
+</html>

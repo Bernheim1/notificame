@@ -1,20 +1,34 @@
-<div class="p-5 mb-4 bg-light rounded-3 border border-2 border-primary shadow scale-up-ver-top">
-  <div class="container-fluid">
-    <h1 class="display-5 fw-bold">Su <span class="subrayado">mandamiento</span> esta listo<span class="brand-ia">!</span></h1>
+<div class="viewer-root">
+  <h3>Preview del mandamiento</h3>
 
-    <textarea [(ngModel)]="textoTerminado" class="form-control" id="exampleFormControlTextarea1" rows="20"></textarea>
+  <div class="controls">
+    <button (click)="loadTemplate()" [disabled]="loading">Recargar plantilla</button>
+    <button (click)="applySampleData()">Cargar datos de ejemplo</button>
+    <button (click)="copyRenderedText()" [disabled]="!processedHtml">Copiar texto</button>
+    <button (click)="copyRawHtml()" [disabled]="!processedHtml">Copiar HTML</button>
+    <label>
+      <input type="checkbox" [(ngModel)]="showRawTextarea" /> Mostrar HTML crudo
+    </label>
+  </div>
 
-    <!-- Responsive buttons -->
-    <div class="d-flex flex-column flex-sm-column flex-md-row justify-content-center align-items-stretch align-items-md-center mt-3">
-      <!-- Button -->
-       <div class="col-4"></div>
-       <div class="col-4">      
-          <button class="btn btn-outline-primary" type="button" style="min-width: 450px;">
-              Copiar
-              <fa-icon [icon]="faClone"></fa-icon>
-          </button>
-        </div>
-       <div class="col-4"></div>
+  <div *ngIf="loading" class="status">Cargando plantilla...</div>
+  <div *ngIf="error" class="status error">{{ error }}</div>
+
+  <!-- Formulario de datos -->
+  <div class="form-container">
+    <h4>Editar campos</h4>
+    <div class="form-row" *ngFor="let key of objectKeys(formData)">
+      <label>{{ key }}:</label>
+      <input type="text" [(ngModel)]="formData[key]" (ngModelChange)="replacePlaceholders(formData)" />
     </div>
+  </div>
+
+  <!-- Preview del HTML procesado -->
+  <div class="preview" [innerHTML]="processedHtmlSafe"></div>
+
+  <!-- Textarea con el HTML crudo -->
+  <div *ngIf="showRawTextarea" class="raw-container">
+    <h4>HTML crudo (readonly)</h4>
+    <textarea readonly rows="12" [value]="processedHtml"></textarea>
   </div>
 </div>
