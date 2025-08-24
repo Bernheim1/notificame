@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ViewEncapsulation } from '@angular/core';
 import { faArrowRight, faClone } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -12,7 +12,8 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   standalone: true,
   imports: [FontAwesomeModule, CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './mostrar-salida.component.html',
-  styleUrl: './mostrar-salida.component.scss'
+  styleUrl: './mostrar-salida.component.scss',
+  encapsulation: ViewEncapsulation.None
 })
 export class MostrarSalidaComponent {
   rawHtml: string = '';
@@ -23,14 +24,24 @@ export class MostrarSalidaComponent {
   error: string | null = null;
 
   formData: Record<string, string> = {
-    Ciudad: '',
-    Fecha: '',
-    Nombre: '',
-    Domicilio: '',
-    Monto: '',
-    Plazo: '',
-    Observaciones: '',
-    Firma: ''
+    organo: '',
+    juzgadoInterviniente: '',
+    direccion: '',
+    juzgadoTribunal: '',
+    tipoDiligencia: '',
+    caratulaExpediente: '',
+    copiasTraslado: '',
+    urgente: '',
+    habilitacionDiaHora: '',
+    denunciado: '',
+    constituido: '',
+    bajoResposabilidad: '',
+    allanamiento: '',
+    allanamientoDomicilioSinOcupantes: '',
+    auxilioFuerzaPublica: '',
+    conCerrajero: '',
+    denunciaOtroDomicilio: '',
+    denunciaDeBienes: ''
   };
 
   constructor(private http: HttpClient, private sanitizer: DomSanitizer) {}
@@ -40,7 +51,7 @@ export class MostrarSalidaComponent {
   }
 
   // Cargar plantilla HTML desde assets
-  loadTemplate(path: string = 'assets/templates/mandamiento.html') {
+  loadTemplate(path: string = 'assets/templates/nuevo-mandamiento.html') {
     this.loading = true;
     this.error = null;
     this.http.get(path, { responseType: 'text' }).subscribe({
@@ -73,18 +84,35 @@ export class MostrarSalidaComponent {
   }
 
   // Datos de ejemplo
-  applySampleData() {
-    const sample = {
-      Ciudad: 'Buenos Aires',
-      Fecha: new Date().toLocaleDateString(),
-      Nombre: 'Agustín Bernheim',
-      Domicilio: 'Calle Falsa 123, CABA',
-      Monto: '$ 12.345,00',
-      Plazo: '10 días hábiles',
-      Observaciones: 'Sin observaciones',
-      Firma: 'Juzgado N° 5'
+  applySampleData(): void {
+    const sample: Record<string, string> = {
+      organo: 'Fiscalía N° 1',
+      juzgadoInterviniente: 'Juzgado Interviniente N° 2',
+      direccion: 'Av. Mayo 1000, CABA',
+      juzgadoTribunal: 'Tribunal Oral N° 3',
+      tipoDiligencia: 'Notificación',
+      caratulaExpediente: 'Expte. 1234/2025 - Martínez s/ Daños',
+      copiasTraslado: '2',
+      urgente: 'NO',
+      habilitacionDiaHora: 'NO',
+      denunciado: 'Juan Pérez',
+      constituido: 'Sí',
+      bajoResposabilidad: 'Sí',
+      allanamiento: 'NO',
+      allanamientoDomicilioSinOcupantes: 'NO',
+      auxilioFuerzaPublica: 'NO',
+      conCerrajero: 'NO',
+      denunciaOtroDomicilio: 'NO',
+      denunciaDeBienes: 'Sí',
+      // Si querés agregar un campo con la fecha o ciudad general (opcional):
+      Fecha: new Date().toLocaleDateString('es-AR'),
+      Ciudad: 'Buenos Aires'
     };
+
+    // Sobrescribimos formData con los valores de ejemplo
     this.formData = { ...sample };
+
+    // Reemplaza los placeholders en el HTML (asumiendo que ya tenés implementado este método)
     this.replacePlaceholders(this.formData);
   }
 
