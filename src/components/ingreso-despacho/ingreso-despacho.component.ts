@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output, output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Output, output } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { FormsModule } from '@angular/forms';
@@ -40,6 +40,33 @@ export class IngresoDespachoComponent {
       this.tipoSalida = TipoSalidaEnum.Mandamiento;
       this.subtipoSalida = subtipo;
       this.textoSalida = TipoSalidaTexto[this.tipoSalida] + ' - ' + TipoMandamientoTexto[subtipo as TipoMandamientoEnum];
+    }
+  }
+
+  dropdownOpen = false;
+  submenuOpen: string | null = null;
+
+  toggleDropdown() {
+    this.dropdownOpen = !this.dropdownOpen;
+    this.submenuOpen = null;
+  }
+
+  openSubmenu(name: string) {
+    this.submenuOpen = name;
+  }
+
+  closeSubmenu() {
+    this.submenuOpen = null;
+  }
+
+    @HostListener('document:click', ['$event'])
+  onClickOutside(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    const dropdown = document.querySelector('.dropdown');
+
+    if (dropdown && !dropdown.contains(target)) {
+      this.dropdownOpen = false;
+      this.submenuOpen = null;
     }
   }
 }

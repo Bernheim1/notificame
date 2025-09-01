@@ -1,11 +1,12 @@
 import { Component, Input, ViewEncapsulation } from '@angular/core';
-import { faArrowRight, faClone } from '@fortawesome/free-solid-svg-icons';
+import { faArrowRight, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Salida } from '../../shared/models/salida';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import * as bootstrap from 'bootstrap';
+import { TipoSalidaEnum } from '../../shared/enums/tipo-salida-enum';
 
 @Component({
   selector: 'app-mostrar-salida',
@@ -16,10 +17,12 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   encapsulation: ViewEncapsulation.None
 })
 export class MostrarSalidaComponent {
+  @Input() tipoSalida : TipoSalidaEnum = TipoSalidaEnum.Mandamiento;
+  faCheck = faCheck;
   rawHtml: string = '';
   processedHtml: string = '';
   processedHtmlSafe: SafeHtml | null = null;
-  showRawTextarea = true;
+  mostrarTest = false;
   loading = false;
   error: string | null = null;
 
@@ -51,7 +54,7 @@ export class MostrarSalidaComponent {
   }
 
   // Cargar plantilla HTML desde assets
-  loadTemplate(path: string = 'assets/templates/nuevo-mandamiento.html') {
+  loadTemplate(path: string = 'assets/templates/mandamiento.html') {
     this.loading = true;
     this.error = null;
     this.http.get(path, { responseType: 'text' }).subscribe({
@@ -120,11 +123,24 @@ export class MostrarSalidaComponent {
     const temp = document.createElement('div');
     temp.innerHTML = this.processedHtml;
     const textToCopy = temp.innerText || temp.textContent || '';
-    navigator.clipboard.writeText(textToCopy).then(() => alert('Texto copiado al portapapeles'));
+    navigator.clipboard.writeText(textToCopy).then(() => {
+          let toastEl = document.getElementById('myToast');
+          if (toastEl) {
+            let toast = new bootstrap.Toast(toastEl, { delay: 3000 }); // 3 seg
+            toast.show();
+          }
+    });
   }
 
   copyRawHtml() {
-    navigator.clipboard.writeText(this.processedHtml).then(() => alert('HTML copiado al portapapeles'));
+    navigator.clipboard.writeText(this.processedHtml).then(() => 
+    {
+          let toastEl = document.getElementById('myToast');
+          if (toastEl) {
+            let toast = new bootstrap.Toast(toastEl, { delay: 3000 }); // 3 seg
+            toast.show();
+          }
+    });
   }
 
   // Para iterar en el template sobre formData

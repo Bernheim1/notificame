@@ -58,24 +58,29 @@ textarea {
     overflow: auto;
 }
 
-  .dropdown-submenu {
-    position: relative;
-  }
+/* Submenú relativo */
+.dropdown-submenu {
+  position: relative;
+}
 
-  .dropdown-submenu > .dropdown-menu {
-    top: 0;
-    left: 100%;
-    margin-top: 0;
-    margin-left: 0.1rem;
-    position: absolute;
-    display: none;
-  }
+/* Submenú absoluto que se oculta por defecto */
+.dropdown-submenu > .dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: 0;
+  margin-left: 0.1rem;
+  position: absolute;
+  display: none;
+  z-index: 1000;
+}
 
-  .dropdown-submenu:hover > .dropdown-menu {
-    display: block;
-  }
+/* Mostrar submenú solo cuando Angular agrega la clase .show */
+.dropdown-submenu > .dropdown-menu.show {
+  display: block;
+}
 
-  .dropdown-submenu > a::after {
-    content: " ▸"; 
-    float: right;
-  }
+/* Triángulo al final del primer nivel */
+.dropdown-submenu > a::after {
+  content: " ▸";
+  float: right;
+}

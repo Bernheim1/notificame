@@ -1,21 +1,19 @@
 <div class="viewer-root">
-  <h3>Preview del mandamiento</h3>
-
-  <div class="controls">
+  <label>
+    <input type="checkbox" [(ngModel)]="mostrarTest" /> Mostrar test
+  </label>
+  <div class="controls" *ngIf="mostrarTest">
     <button (click)="loadTemplate()" [disabled]="loading">Recargar plantilla</button>
     <button (click)="applySampleData()">Cargar datos de ejemplo</button>
     <button (click)="copyRenderedText()" [disabled]="!processedHtml">Copiar texto</button>
     <button (click)="copyRawHtml()" [disabled]="!processedHtml">Copiar HTML</button>
-    <label>
-      <input type="checkbox" [(ngModel)]="showRawTextarea" /> Mostrar HTML crudo
-    </label>
   </div>
 
   <div *ngIf="loading" class="status">Cargando plantilla...</div>
   <div *ngIf="error" class="status error">{{ error }}</div>
 
   <!-- Formulario de datos -->
-  <div class="form-container">
+  <div class="form-container" *ngIf="mostrarTest">
     <h4>Editar campos</h4>
     <div class="form-row" *ngFor="let key of objectKeys(formData)">
       <label>{{ key }}:</label>
@@ -24,11 +22,27 @@
   </div>
 
   <!-- Preview del HTML procesado -->
-  <div class="preview" [innerHTML]="processedHtmlSafe"></div>
+   <div class="p-5 bg-light rounded-3 border border-2 border-primary shadow scale-up-ver-top">
+     <div class="preview" [innerHTML]="processedHtmlSafe"></div>
+   </div>
+</div>
+<button class="btn btn-primary btn-generar-flotante" type="submit" (click)="copyRawHtml()">
+  Copiar <span class="fw-bold">{{ this.tipoSalida == 1 ? 'Cédula' : 'Mandamiento' }}</span>
+</button>
 
-  <!-- Textarea con el HTML crudo -->
-  <div *ngIf="showRawTextarea" class="raw-container">
-    <h4>HTML crudo (readonly)</h4>
-    <textarea readonly rows="12" [value]="processedHtml"></textarea>
+<div class="toast-container position-fixed start-50 translate-middle-x" style="top: 80px; z-index: 1080;">
+  <div id="myToast" 
+       class="toast align-items-center text-bg-primary border-0" 
+       role="alert" 
+       aria-live="assertive" 
+       aria-atomic="true" 
+       style="min-width: 400px; max-width: 600px;">
+    <div class="d-flex">
+      <div class="toast-body">
+        El contenido de su <b>{{ this.tipoSalida == 1 ? 'Cédula' : 'Mandamiento' }}</b> fue copiado 
+        <fa-icon [icon]="faCheck"></fa-icon>
+      </div>
+      <button type="button" class="btn-close btn-close-white m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+    </div>
   </div>
 </div>

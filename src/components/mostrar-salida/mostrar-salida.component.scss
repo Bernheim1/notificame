@@ -50,18 +50,6 @@
   border: 1px solid #ccc;
 }
 
-.preview {
-  border: 1px solid #ddd;
-  padding: 18px;
-  min-height: 200px;
-  background: white;
-  user-select: text;
-  white-space: pre-wrap;
-  font-family: "Times New Roman", Times, serif;
-  line-height: 1.4;
-  margin-bottom: 12px;
-}
-
 .raw-container textarea {
   width: 100%;
   font-family: monospace;
@@ -134,3 +122,94 @@
 }
 
 
+.viewer-root .preview {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: auto;             /* scroll si hace falta */
+  padding: 12px;              /* ya lo tenías; repetir es seguro */
+}
+
+/* Forzamos tablas internas a ocupar el 100% del ancho y un layout estable */
+.viewer-root .preview table {
+  width: 100% !important;     /* anula width inline en la mayoría de los casos */
+  max-width: 100% !important;
+  table-layout: fixed;        /* evita que una celda estire todo el ancho */
+  border-collapse: collapse;
+}
+
+/* Celdas adaptables (para que el texto se envuelva y no se desborde) */
+.viewer-root .preview td,
+.viewer-root .preview th {
+  box-sizing: border-box;
+  word-wrap: break-word;
+  white-space: normal;        /* en caso de que haya white-space inline */
+  vertical-align: top;
+  padding: 4px 6px;
+}
+
+/* Hacer imágenes y otros elementos responsivos */
+.viewer-root .preview img,
+.viewer-root .preview iframe,
+.viewer-root .preview embed {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Regla objetivo para sobrescribir estilos inline que contengan width: */
+.viewer-root .preview [style*="width:"] {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Si hay celdas con width="123" (atributo), esta regla evita que reduzcan la tabla */
+.viewer-root .preview [width] {
+  width: auto !important;
+  max-width: 100% !important;
+}
+
+.btn-generar-flotante {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1050;
+
+  width: 90%;
+  max-width: 500px;
+
+  background-color: var(--bs-primary);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+
+  transition: 
+    background-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.2s ease;
+}
+
+.btn-generar-flotante:hover {
+  filter: brightness(95%);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -2px);
+}
+
+.btn-generar-flotante:active {
+  transform: translate(-50%, 1px) scale(0.98);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile tweaks */
+@media (max-width: 576px) {
+  .btn-generar-flotante {
+    font-size: 0.95rem;
+    padding: 0.65rem 1.25rem;
+    bottom: 15px;
+  }
+}
