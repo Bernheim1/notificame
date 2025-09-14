@@ -4,7 +4,6 @@
   </label>
   <div class="controls" *ngIf="mostrarTest">
     <button (click)="loadTemplate()" [disabled]="loading">Recargar plantilla</button>
-    <button (click)="applySampleData()">Cargar datos de ejemplo</button>
     <button (click)="copyRenderedText()" [disabled]="!processedHtml">Copiar texto</button>
     <button (click)="copyRawHtml()" [disabled]="!processedHtml">Copiar HTML</button>
   </div>

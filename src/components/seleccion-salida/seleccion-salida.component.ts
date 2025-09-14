@@ -39,18 +39,18 @@ export class SeleccionSalidaComponent {
   }
 
   ngOnInit(): void {
-        this.formulario = this.fb.group({
+    this.formulario = this.fb.group({
       organo: this.fb.group({
         organo: ['', [Validators.required]],
         juzgadoInterviniente: ['', [Validators.required]],
         juzgadoTribunal: ['', [Validators.required]],
-        direccionJuzgado: ['', [Validators.required]], 
+        direccionJuzgado: ['', [Validators.required]],
       }),
       domicilioRequerido: this.fb.group({
         localidad: ['', [Validators.required, Validators.minLength(3)]],
         domicilio: ['', [Validators.required]],
         nro: ['', [Validators.required, this.nroValidator]],
-        piso: ['', [Validators.pattern(/^\d*$/), Validators.min(0), Validators.max(99)]], 
+        piso: ['', [Validators.pattern(/^\d*$/), Validators.min(0), Validators.max(99)]],
         depto: ['', [Validators.minLength(1)]],
         unidad: ['']
       }),
@@ -83,25 +83,19 @@ export class SeleccionSalidaComponent {
         montoCapitalNumerico: [''],
         montoInteresesTexto: [''],
         montoInteresesNumerico: [''],
-//         [Validators.required, Validators.minLength(3)]
-// [Validators.required, Validators.minLength(3)]
-// [Validators.required, Validators.minLength(3)]
-// [Validators.required, Validators.minLength(3)]
-// [Validators.required, Validators.minLength(3)]
       }),
     });
-    
+
     // Llamada al servicio para procesar el despacho
     let datos = this.despachoService.procesarDespacho(this.textoDespacho, this.tipoSalida, this.subtipoSalida);
-    
 
-    // Mapear los datos extraídos del despacho a los controles del formulario
+    // Mapear los datos al formulario (incluyendo textoContenido)
     this.formulario.patchValue({
       organo: {
-        organo: datos.organo.organo, // Estos valores deberían estar en el despacho o ser estáticos
-        juzgadoInterviniente: datos.organo.juzgadoInterviniente,  // Mapear el juzgado extraído
-        juzgadoTribunal: datos.organo.juzgadoTribunal,            // Mapear el tribunal extraído
-        direccionJuzgado: datos.organo.direccionJuzgado           // Dirección extraída del despacho
+        organo: datos.organo.organo,
+        juzgadoInterviniente: datos.organo.juzgadoInterviniente,
+        juzgadoTribunal: datos.organo.juzgadoTribunal,
+        direccionJuzgado: datos.organo.direccionJuzgado
       },
       expediente: {
         tipoDiligencia: datos.expediente.tipoDiligencia,
@@ -127,11 +121,11 @@ export class SeleccionSalidaComponent {
         otros: datos.facultadesAtribuciones.otros
       },
       textoContenido: {
-        requerido: datos.textoContenido.requerido,
-        montoCapitalTexto: datos.textoContenido.montoCapitalTexto,
-        montoCapitalNumerico: datos.textoContenido.montoCapitalNumerico,
-        montoInteresesTexto: datos.textoContenido.montoInteresesTexto,
-        montoInteresesNumerico: datos.textoContenido.montoInteresesNumerico,
+        requerido: datos.textoContenido?.requerido || '',
+        montoCapitalTexto: datos.textoContenido?.montoCapitalTexto || '',
+        montoCapitalNumerico: datos.textoContenido?.montoCapitalNumerico ?? '',
+        montoInteresesTexto: datos.textoContenido?.montoInteresesTexto || '',
+        montoInteresesNumerico: datos.textoContenido?.montoInteresesNumerico ?? ''
       }
     });
   }
@@ -157,18 +151,70 @@ export class SeleccionSalidaComponent {
     this.salidaSeleccionada.emit(retorno);
   }
 
-  mapSalida()
-  {
-    var retorno = new Salida();
+  mapSalida(): Salida {
+    const retorno = new Salida();
     retorno.tipoSalida = this.tipoSalida;
-    retorno.localidad = this.formulario.get('localidad')?.value;
-    retorno.domicilio = this.formulario.get('domicilio')?.value;
-    retorno.nro = this.formulario.get('nro')?.value;
-    retorno.piso = this.formulario.get('piso')?.value;
-    retorno.depto = this.formulario.get('depto')?.value;
-    retorno.unidad = this.formulario.get('unidad')?.value;
+
+    // organo
+    retorno.organo = this.formulario.get('organo.organo')?.value || '';
+    retorno.juzgadoInterviniente = this.formulario.get('organo.juzgadoInterviniente')?.value || '';
+    retorno.juzgadoTribunal = this.formulario.get('organo.juzgadoTribunal')?.value || '';
+    retorno.direccionJuzgado = this.formulario.get('organo.direccionJuzgado')?.value || '';
+
+    // domicilioRequerido
+    retorno.localidad = this.formulario.get('domicilioRequerido.localidad')?.value || '';
+    retorno.domicilio = this.formulario.get('domicilioRequerido.domicilio')?.value || '';
+
+    const nroVal = this.formulario.get('domicilioRequerido.nro')?.value;
+    retorno.nro = (nroVal === null || nroVal === undefined || nroVal === '') ? null : (isNaN(Number(nroVal)) ? null : Number(nroVal));
+
+    const pisoVal = this.formulario.get('domicilioRequerido.piso')?.value;
+    retorno.piso = (pisoVal === null || pisoVal === undefined || pisoVal === '') ? null : (isNaN(Number(pisoVal)) ? null : Number(pisoVal));
+
+    retorno.depto = this.formulario.get('domicilioRequerido.depto')?.value || '';
+    retorno.unidad = this.formulario.get('domicilioRequerido.unidad')?.value || '';
+
+    // expediente
+    retorno.tipoDiligencia = this.formulario.get('expediente.tipoDiligencia')?.value || '';
+    retorno.caratulaExpediente = this.formulario.get('expediente.caratulaExpediente')?.value || '';
+    retorno.copiasTraslado = !!this.formulario.get('expediente.copiasTraslado')?.value;
+
+    // caracter
+    retorno.urgente = !!this.formulario.get('caracter.urgente')?.value;
+    retorno.habilitacionDiaHora = !!this.formulario.get('caracter.habilitacionDiaHora')?.value;
+    retorno.bajoResponsabilidad = !!this.formulario.get('caracter.bajoResponsabilidad')?.value;
+
+    // tipoDomicilio
+    retorno.denunciado = !!this.formulario.get('tipoDomicilio.denunciado')?.value;
+    retorno.constituido = !!this.formulario.get('tipoDomicilio.constituido')?.value;
+
+    // facultadesAtribuciones
+    retorno.allanamiento = !!this.formulario.get('facultadesAtribuciones.allanamiento')?.value;
+    retorno.allanamientoDomicilioSinOcupantes = !!this.formulario.get('facultadesAtribuciones.allanamientoDomicilioSinOcupantes')?.value;
+    retorno.auxilioFuerzaPublica = !!this.formulario.get('facultadesAtribuciones.auxilioFuerzaPublica')?.value;
+    retorno.conCerrajero = !!this.formulario.get('facultadesAtribuciones.conCerrajero')?.value;
+    retorno.denunciaOtroDomicilio = !!this.formulario.get('facultadesAtribuciones.denunciaOtroDomicilio')?.value;
+    retorno.denunciaBienes = !!this.formulario.get('facultadesAtribuciones.denunciaBienes')?.value;
+
+    const otrosFlag = this.formulario.get('facultadesAtribuciones.otros')?.value;
+    retorno.otrosFacultades = otrosFlag ? 'SI' : 'NO';
+
+    // textoContenido (nuevo)
+    retorno.textoRequerido = this.formulario.get('textoContenido.requerido')?.value || '';
+    retorno.montoCapitalTexto = this.formulario.get('textoContenido.montoCapitalTexto')?.value || '';
+    const montoCapNum = this.formulario.get('textoContenido.montoCapitalNumerico')?.value;
+    retorno.montoCapitalNumerico = (montoCapNum === null || montoCapNum === undefined || montoCapNum === '') ? null : (isNaN(Number(montoCapNum)) ? null : Number(montoCapNum));
+    retorno.montoInteresesTexto = this.formulario.get('textoContenido.montoInteresesTexto')?.value || '';
+    const montoIntNum = this.formulario.get('textoContenido.montoInteresesNumerico')?.value;
+    retorno.montoInteresesNumerico = (montoIntNum === null || montoIntNum === undefined || montoIntNum === '') ? null : (isNaN(Number(montoIntNum)) ? null : Number(montoIntNum));
 
     return retorno;
+  }
+
+
+  // Helper para convertir booleanos a "SI"/"NO"
+  private boolToSiNo(value: any): string {
+    return value ? 'SI' : 'NO';
   }
 
   campoInvalido(path: string): boolean {

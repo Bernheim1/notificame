@@ -33,7 +33,7 @@
   </div>
 
   <div *ngIf="this.step == 2">
-    <app-mostrar-salida></app-mostrar-salida>
+    <app-mostrar-salida [tipoSalida]="this.tipoSalida" [salida]="this.salida" [textoDespacho]="this.textoDespacho"></app-mostrar-salida>
   </div>
 </div>
 <router-outlet/>
