@@ -6,7 +6,7 @@ import { faArrowRight, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { Salida } from '../../shared/models/salida';
 import { TipoCedulaEnum, TipoCedulaTexto, TipoMandamientoEnum, TipoMandamientoTexto, TipoSalidaEnum, TipoSalidaTexto } from '../../shared/enums/tipo-salida-enum';
 import { PreventEnterDirective } from '../../shared/directives/prevent-enter.directive';
-import { DespachoService } from '../../shared/services/despacho.service';
+import { DespachoService } from '../../shared/services/despacho/despacho.service';
 import { ContenteditableValueAccessorDirective } from '../../shared/directives/content-editable-model.directive';
 
 @Component({

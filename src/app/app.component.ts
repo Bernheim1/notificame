@@ -52,7 +52,6 @@ export class AppComponent {
     }
   }
 
-
   onSalidaSeleccionada(event : Salida) 
   {
     this.salida = event;
