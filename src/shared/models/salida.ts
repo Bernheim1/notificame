@@ -46,9 +46,9 @@ export class Salida {
   // 'requerido' es un texto libre; los montos hay versión texto y versión numérica
   textoRequerido: string = '';
   montoCapitalTexto: string = '';
-  montoCapitalNumerico: number | null = null;
+  montoCapitalNumerico: string | null = null;
   montoInteresesTexto: string = '';
-  montoInteresesNumerico: number | null = null;
+  montoInteresesNumerico: string | null = null;
 
   constructor(init?: Partial<Salida>) {
     if (init) Object.assign(this, init);

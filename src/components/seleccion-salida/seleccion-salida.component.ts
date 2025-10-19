@@ -218,11 +218,20 @@ export class SeleccionSalidaComponent {
     // textoContenido (nuevo)
     retorno.textoRequerido = this.formulario.get('textoContenido.requerido')?.value || '';
     retorno.montoCapitalTexto = this.formulario.get('textoContenido.montoCapitalTexto')?.value || '';
-    const montoCapNum = this.formulario.get('textoContenido.montoCapitalNumerico')?.value;
-    retorno.montoCapitalNumerico = (montoCapNum === null || montoCapNum === undefined || montoCapNum === '') ? null : (isNaN(Number(montoCapNum)) ? null : Number(montoCapNum));
+    // const montoCapNum = this.formulario.get('textoContenido.montoCapitalNumerico')?.value;
+    // retorno.montoCapitalNumerico = (montoCapNum !== null && montoCapNum !== undefined && String(montoCapNum).trim() !== '') ? montoCapNum : null;
+    const montoCapNumControlVal = this.formulario.get('textoContenido.montoCapitalNumerico')?.value;
+    const montoCapNum = (montoCapNumControlVal !== null && montoCapNumControlVal !== undefined)
+      ? String(montoCapNumControlVal).replace(/^\(\s*/, '').replace(/\s*\)$/, '')
+      : '';
+    retorno.montoCapitalNumerico = montoCapNum.trim() !== '' ? montoCapNum : null;
+
     retorno.montoInteresesTexto = this.formulario.get('textoContenido.montoInteresesTexto')?.value || '';
-    const montoIntNum = this.formulario.get('textoContenido.montoInteresesNumerico')?.value;
-    retorno.montoInteresesNumerico = (montoIntNum === null || montoIntNum === undefined || montoIntNum === '') ? null : (isNaN(Number(montoIntNum)) ? null : Number(montoIntNum));
+    const montoIntNumControlVal = this.formulario.get('textoContenido.montoInteresesNumerico')?.value;
+    const montoIntNum = (montoIntNumControlVal !== null && montoIntNumControlVal !== undefined)
+      ? String(montoIntNumControlVal).replace(/^\(\s*/, '').replace(/\s*\)$/, '')
+      : '';
+    retorno.montoInteresesNumerico = montoIntNum.trim() !== '' ? montoIntNum : null;
 
     return retorno;
   }
