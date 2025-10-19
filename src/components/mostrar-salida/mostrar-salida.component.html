@@ -1,34 +1,18 @@
 <div class="viewer-root">
-  <label>
-    <input type="checkbox" [(ngModel)]="mostrarTest" /> Mostrar test
-  </label>
-  <div class="controls" *ngIf="mostrarTest">
-    <button (click)="loadTemplate()" [disabled]="loading">Recargar plantilla</button>
-    <button (click)="copyRenderedText()" [disabled]="!processedHtml">Copiar texto</button>
-    <button (click)="copyRawHtml()" [disabled]="!processedHtml">Copiar HTML</button>
-  </div>
-
-  <div *ngIf="loading" class="status">Cargando plantilla...</div>
-  <div *ngIf="error" class="status error">{{ error }}</div>
-
-  <!-- Formulario de datos -->
-  <div class="form-container" *ngIf="mostrarTest">
-    <h4>Editar campos</h4>
-    <div class="form-row" *ngFor="let key of objectKeys(formData)">
-      <label>{{ key }}:</label>
-      <input type="text" [(ngModel)]="formData[key]" (ngModelChange)="replacePlaceholders(formData)" />
-    </div>
-  </div>
-
   <!-- Preview del HTML procesado -->
    <div class="p-5 bg-light rounded-3 border border-2 border-primary shadow scale-up-ver-top">
      <div class="preview" [innerHTML]="processedHtmlSafe"></div>
    </div>
 </div>
-<button class="btn btn-primary btn-generar-flotante" type="submit" (click)="copyRawHtml()">
-  Copiar <span class="fw-bold">{{ this.tipoSalida == 1 ? 'Cédula' : 'Mandamiento' }}</span>
-</button>
 
+<div class="btn-group btn-generar-flotante">
+  <button class="btn text-white" type="button" (click)="copyRawHtml(); copiedOnce = true">
+    Copiar <span class="fw-bold">{{ this.tipoSalida == 1 ? 'Cédula' : 'Mandamiento' }}</span>
+  </button>
+  <button *ngIf="copiedOnce" class="btn text-white" type="button" (click)="onReingresar()" aria-label="Reingresar">
+    <fa-icon [icon]="faRepeat"></fa-icon>
+  </button>
+</div>
 <div class="toast-container position-fixed start-50 translate-middle-x" style="top: 80px; z-index: 1080;">
   <div id="myToast" 
        class="toast align-items-center text-bg-primary border-0" 

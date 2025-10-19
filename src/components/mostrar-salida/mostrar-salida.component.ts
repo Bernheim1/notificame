@@ -8,6 +8,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import * as bootstrap from 'bootstrap';
 import { TipoSalidaEnum } from '../../shared/enums/tipo-salida-enum';
 import { Salida } from '../../shared/models/salida';
+import { faRepeat } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-mostrar-salida',
@@ -23,12 +24,14 @@ export class MostrarSalidaComponent implements OnInit, OnChanges {
   @Input() textoDespacho?: string;
 
   faCheck = faCheck;
+  faRepeat = faRepeat;
   rawHtml: string = '';
   processedHtml: string = '';
   processedHtmlSafe: SafeHtml | null = null;
   mostrarTest = false;
   loading = false;
   error: string | null = null;
+  copiedOnce = false;
 
   // FormData con todas las claves que usa tu plantilla (valores por defecto '')
   formData: Record<string, string> = {
@@ -240,5 +243,9 @@ export class MostrarSalidaComponent implements OnInit, OnChanges {
   // util
   objectKeys(obj: any): string[] {
     return Object.keys(obj);
+  }
+
+  onReingresar() {
+    window.location.reload();
   }
 }

@@ -121,7 +121,6 @@
   margin: 4px 0;
 }
 
-
 .viewer-root .preview {
   width: 100%;
   max-width: 100%;
@@ -169,6 +168,7 @@
   max-width: 100% !important;
 }
 
+/* Botón flotante principal */
 .btn-generar-flotante {
   position: fixed;
   bottom: 20px;
@@ -192,6 +192,9 @@
     background-color 0.3s ease,
     box-shadow 0.3s ease,
     transform 0.2s ease;
+
+  display: flex;              
+  overflow: hidden;          
 }
 
 .btn-generar-flotante:hover {
@@ -203,6 +206,22 @@
 .btn-generar-flotante:active {
   transform: translate(-50%, 1px) scale(0.98);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Ajuste interno de proporciones con divisor visible */
+.btn-generar-flotante .btn:first-child {
+  flex: 3; /* ocupa 3/4 del ancho */
+  background-color: var(--bs-primary); /* 👈 fondo sólido propio */
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.btn-generar-flotante .btn + .btn {
+  flex: 1; /* ocupa 1/4 del ancho */
+  background-color: var(--bs-primary); /* 👈 fondo sólido propio */
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.8); /* 👈 línea siempre visible */
 }
 
 /* Mobile tweaks */

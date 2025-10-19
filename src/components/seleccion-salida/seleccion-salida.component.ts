@@ -8,6 +8,7 @@ import { TipoCedulaEnum, TipoCedulaTexto, TipoMandamientoEnum, TipoMandamientoTe
 import { PreventEnterDirective } from '../../shared/directives/prevent-enter.directive';
 import { DespachoService } from '../../shared/services/despacho/despacho.service';
 import { ContenteditableValueAccessorDirective } from '../../shared/directives/content-editable-model.directive';
+import { TextoMonedaANumeroPipe } from '../../shared/pipes/textoMonedaANumero.pipe';
 
 @Component({
   selector: 'app-seleccion-salida',
@@ -25,6 +26,7 @@ export class SeleccionSalidaComponent {
   @Input() subtipoSalida : any;
   formulario!: FormGroup;
   textoTitulo = '';
+  private montoTextoPipe = new TextoMonedaANumeroPipe();
 
   constructor(private fb: FormBuilder, private despachoService : DespachoService) {}
 
@@ -127,6 +129,20 @@ export class SeleccionSalidaComponent {
         montoInteresesTexto: datos.textoContenido?.montoInteresesTexto || '',
         montoInteresesNumerico: datos.textoContenido?.montoInteresesNumerico ?? ''
       }
+    });
+
+    this.formulario.get('textoContenido.montoCapitalTexto')?.valueChanges.subscribe(valor => {
+      const numericoControl = this.formulario.get('textoContenido.montoCapitalNumerico');
+      const converted = this.montoTextoPipe.transform(valor); // asumo TextoMonedaANumeroPipe -> devuelve el valor que quieras setear
+      // siempre setear, aunque haya valor previo
+      numericoControl?.setValue(converted, { emitEvent: false });
+    });
+
+    this.formulario.get('textoContenido.montoInteresesTexto')?.valueChanges.subscribe(valor => {
+      const numericoControl = this.formulario.get('textoContenido.montoInteresesNumerico');
+      const converted = this.montoTextoPipe.transform(valor); // asumo TextoMonedaANumeroPipe -> devuelve el valor que quieras setear
+      // siempre setear, aunque haya valor previo
+      numericoControl?.setValue(converted, { emitEvent: false });
     });
   }
 
