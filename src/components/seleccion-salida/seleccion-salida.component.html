@@ -22,14 +22,51 @@
                                         El organo es obligatorio.
                                     </div>
                                 </div>
-                                <div class="col-12">
-                                    <label class="form-label">Juzgado Interviniente</label>
-                                    <input type="text" placeholder="Juzgado Interviniente" class="form-control" formControlName="juzgadoInterviniente"
-                                    [ngClass]="{'is-invalid': campoInvalido('organo.juzgadoInterviniente')}">
-                                    <div class="text-danger" *ngIf="campoInvalido('organo.juzgadoInterviniente')">
-                                        El Juzgado Interviniente es obligatorio.
-                                    </div>
-                                </div>
+                            <div class="col-12">
+                            <label class="form-label">Juzgado Interviniente</label>
+
+                            <div class="position-relative" tabindex="0" (keydown)="onKeydown($event)">
+                                <!-- input ligado al FormControl; tiene referencia #juzgadoInput -->
+                                <input
+                                #juzgadoInput
+                                type="text"
+                                class="form-control mb-2"
+                                placeholder="Escriba para filtrar..."
+                                formControlName="juzgadoInterviniente"
+                                (input)="onFiltroJuzgado($any($event.target).value)"
+                                (focus)="onFocusInput()"
+                                (blur)="onBlurDropdown()"
+                                autocomplete="off"
+                                aria-autocomplete="list"
+                                [attr.aria-expanded]="openDropdown"
+                                aria-controls="juzgados-list"
+                                role="combobox"
+                                />
+
+                                <!-- lista filtrada en vivo con handlers para mouse/scroll -->
+                                <ul id="juzgados-list"
+                                    *ngIf="openDropdown && juzgadosFiltrados?.length"
+                                    class="list-group position-absolute w-100 shadow"
+                                    style="z-index:1000; max-height:260px; overflow:auto;"
+                                    (mouseenter)="onListMouseEnter()"
+                                    (mouseleave)="onListMouseLeave()"
+                                    (mousedown)="onListMouseDown($event)">
+                                <li *ngFor="let item of juzgadosFiltrados; let i = index"
+                                    (mouseenter)="highlight(i)"
+                                    (click)="chooseJuzgado(item)"
+                                    class="list-group-item list-group-item-action"
+                                    [class.active]="i === highlightedIndex"
+                                    role="option"
+                                    [attr.aria-selected]="i === highlightedIndex">
+                                    {{ item.juzgado }}
+                                </li>
+                                </ul>
+                            </div>
+
+                            <div class="text-danger" *ngIf="campoInvalido('organo.juzgadoInterviniente')">
+                                El Juzgado Interviniente es obligatorio.
+                            </div>
+                            </div>
                                 <div class="col-12">
                                     <label class="form-label">Juzgado/Tribunal</label>
                                     <input type="text" placeholder="Juzgado/Tribunal" class="form-control" formControlName="juzgadoTribunal"
