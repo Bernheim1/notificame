@@ -9,64 +9,62 @@
             <div class="row">
                 <div class="col-md-6 col-xs-12">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-center align-items-center">
+                        <div class="card-header header-subrayado d-flex justify-content-center align-items-center">
                             <h4 class="">Órgano</h4>
                         </div>
                         <div class="card-body">
                             <div formGroupName="organo" class="row g-3">
                                 <div class="col-12">
-                                    <label class="form-label">Órgano</label>
-                                    <input type="text" placeholder="Órgano" class="form-control" formControlName="organo"
-                                    [ngClass]="{'is-invalid': campoInvalido('organo.organo')}">
-                                    <div class="text-danger" *ngIf="campoInvalido('organo.organo')">
-                                        El organo es obligatorio.
-                                    </div>
+                                <label class="form-label">Órgano</label>
+                                <div class="position-relative" tabindex="0" (keydown)="onKeydown($event)">
+                                    <input
+                                    #organoInput
+                                    type="text"
+                                    class="form-control mb-2"
+                                    placeholder="Escriba para filtrar..."
+                                    formControlName="organo"
+                                    (input)="onFiltroJuzgado($any($event.target).value)"
+                                    (focus)="onFocusInput()"
+                                    (blur)="onBlurDropdown()"
+                                    autocomplete="off"
+                                    aria-autocomplete="list"
+                                    [attr.aria-expanded]="openDropdown"
+                                    aria-controls="organo-list"
+                                    role="combobox"
+                                    />
+                                    <ul id="organo-list"
+                                        *ngIf="openDropdown && juzgadosFiltrados?.length"
+                                        class="list-group position-absolute w-100 shadow"
+                                        style="z-index:1000; max-height:260px; overflow:auto;"
+                                        (mouseenter)="onListMouseEnter()"
+                                        (mouseleave)="onListMouseLeave()"
+                                        (mousedown)="onListMouseDown()">
+                                    <li *ngFor="let item of juzgadosFiltrados; let i = index"
+                                        (mouseenter)="highlight(i)"
+                                        (click)="chooseJuzgado(item)"
+                                        class="list-group-item list-group-item-action"
+                                        [class.active]="i === highlightedIndex"
+                                        role="option"
+                                        [attr.aria-selected]="i === highlightedIndex">
+                                        {{ item.juzgado || item }}
+                                    </li>
+                                    </ul>
                                 </div>
-                            <div class="col-12">
-                            <label class="form-label">Juzgado Interviniente</label>
-
-                            <div class="position-relative" tabindex="0" (keydown)="onKeydown($event)">
-                                <!-- input ligado al FormControl; tiene referencia #juzgadoInput -->
-                                <input
-                                #juzgadoInput
-                                type="text"
-                                class="form-control mb-2"
-                                placeholder="Escriba para filtrar..."
-                                formControlName="juzgadoInterviniente"
-                                (input)="onFiltroJuzgado($any($event.target).value)"
-                                (focus)="onFocusInput()"
-                                (blur)="onBlurDropdown()"
-                                autocomplete="off"
-                                aria-autocomplete="list"
-                                [attr.aria-expanded]="openDropdown"
-                                aria-controls="juzgados-list"
-                                role="combobox"
-                                />
-
-                                <!-- lista filtrada en vivo con handlers para mouse/scroll -->
-                                <ul id="juzgados-list"
-                                    *ngIf="openDropdown && juzgadosFiltrados?.length"
-                                    class="list-group position-absolute w-100 shadow"
-                                    style="z-index:1000; max-height:260px; overflow:auto;"
-                                    (mouseenter)="onListMouseEnter()"
-                                    (mouseleave)="onListMouseLeave()"
-                                    (mousedown)="onListMouseDown($event)">
-                                <li *ngFor="let item of juzgadosFiltrados; let i = index"
-                                    (mouseenter)="highlight(i)"
-                                    (click)="chooseJuzgado(item)"
-                                    class="list-group-item list-group-item-action"
-                                    [class.active]="i === highlightedIndex"
-                                    role="option"
-                                    [attr.aria-selected]="i === highlightedIndex">
-                                    {{ item.juzgado }}
-                                </li>
-                                </ul>
-                            </div>
-
-                            <div class="text-danger" *ngIf="campoInvalido('organo.juzgadoInterviniente')">
-                                El Juzgado Interviniente es obligatorio.
-                            </div>
-                            </div>
+                                <div class="text-danger" *ngIf="campoInvalido('organo.organo')">
+                                    El órgano es obligatorio.
+                                </div>
+                                </div>
+                                <div class="col-12">
+                                <label class="form-label">Juzgado Interviniente</label>
+                                <input type="text"
+                                        placeholder="Juzgado Interviniente"
+                                        class="form-control"
+                                        formControlName="juzgadoInterviniente"
+                                        [ngClass]="{'is-invalid': campoInvalido('organo.juzgadoInterviniente')}">
+                                <div class="text-danger" *ngIf="campoInvalido('organo.juzgadoInterviniente')">
+                                    El Juzgado Interviniente es obligatorio.
+                                </div>
+                                </div>
                                 <div class="col-12">
                                     <label class="form-label">Juzgado/Tribunal</label>
                                     <input type="text" placeholder="Juzgado/Tribunal" class="form-control" formControlName="juzgadoTribunal"
@@ -92,7 +90,7 @@
                         <div class="card-header d-flex justify-content-center align-items-center">
                             <h4 class="">Domicilio del <span class="subrayado">Requerido</span></h4>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body domicilio-requerido">
                             <div formGroupName="domicilioRequerido" class="row g-3">
                                 <div class="col-12">
                                     <label class="form-label">Localidad</label>
@@ -151,7 +149,7 @@
             <div class="row mt-3">
                 <div class="col-md-6 col-xs-12">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-center align-items-center">
+                        <div class="card-header header-subrayado d-flex justify-content-center align-items-center">
                             <h4 class="">Expediente</h4>
                         </div>
                         <div class="card-body">
@@ -186,7 +184,7 @@
                 </div>
                 <div class="col-md-6 col-xs-12">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-center align-items-center">
+                        <div class="card-header header-subrayado d-flex justify-content-center align-items-center">
                             <h4 class="">Carácter</h4>
                         </div>
                         <div class="card-body">
@@ -213,7 +211,7 @@
                         </div>
                     </div>
                     <div class="card">
-                        <div class="card-header d-flex justify-content-center align-items-center">
+                        <div class="card-header header-subrayado d-flex justify-content-center align-items-center">
                             <h4 class="">Tipo de Domicilio</h4>
                         </div>
                         <div class="card-body">
@@ -238,7 +236,7 @@
             <div class="row mt-3">
                 <div class="col-md-12 col-xs-12">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-center align-items-center">
+                        <div class="card-header header-subrayado d-flex justify-content-center align-items-center">
                             <h4 class="">Facultades y atribuciones</h4>
                         </div>
                         <div class="card-body">
@@ -293,7 +291,7 @@
             <div class="row mt-3">
                 <div class="col-md-12 col-xs-12">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-center align-items-center">
+                        <div class="card-header header-subrayado d-flex justify-content-center align-items-center">
                             <h4>Contenido de su <span class="subrayado">{{this.tipoSalida == 1 ? 'Cédula' : 'Mandamiento'}}</span></h4>
                         </div>
                         <div class="card-body fs-5 lh-5" style="text-align: justify;" id="editable-text" formGroupName="textoContenido">

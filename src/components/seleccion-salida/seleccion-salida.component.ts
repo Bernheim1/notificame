@@ -15,7 +15,14 @@ import Papa from 'papaparse';
 @Component({
   selector: 'app-seleccion-salida',
   standalone: true,
-  imports: [CommonModule, FormsModule, FontAwesomeModule, ReactiveFormsModule, PreventEnterDirective, ContenteditableValueAccessorDirective],
+  imports: [
+    CommonModule,
+    FormsModule,
+    FontAwesomeModule,
+    ReactiveFormsModule,
+    PreventEnterDirective,
+    ContenteditableValueAccessorDirective
+  ],
   templateUrl: './seleccion-salida.component.html',
   styleUrl: './seleccion-salida.component.scss'
 })
@@ -24,52 +31,47 @@ export class SeleccionSalidaComponent implements OnInit {
   faArrowRight = faArrowRight;
 
   @Output() salidaSeleccionada = new EventEmitter<Salida>();
-  @Input() textoDespacho : string = '';
-  @Input() tipoSalida : TipoSalidaEnum = TipoSalidaEnum.SinAsignar;
-  @Input() subtipoSalida : any;
+  @Input() textoDespacho: string = '';
+  @Input() tipoSalida: TipoSalidaEnum = TipoSalidaEnum.SinAsignar;
+  @Input() subtipoSalida: any;
 
   formulario!: FormGroup;
   textoTitulo = '';
   private montoTextoPipe = new TextoMonedaANumeroPipe();
 
-  // datos de juzgados (sin id)
   filtroJuzgado: string = '';
-  // cada item: { juzgado: string, direccion?: string, raw?: any }
-  juzgadosIntervinientes: Array<{ juzgado: string, direccion?: string, raw?: any }> = [];
-  juzgadosFiltrados: Array<{ juzgado: string, direccion?: string, raw?: any }> = [];
+  juzgadosIntervinientes: Array<{ juzgado: string; direccion?: string; raw?: any }> = [];
+  juzgadosFiltrados: Array<{ juzgado: string; direccion?: string; raw?: any }> = [];
 
-  // UI / control dropdown
   openDropdown = false;
   highlightedIndex = -1;
-  @ViewChild('juzgadoInput') juzgadoInput?: ElementRef<HTMLInputElement>;
-
+  @ViewChild('organoInput') organoInput!: ElementRef<HTMLInputElement>;
   pointerOverList = false;
   preventClose = false;
-
   suppressOpen = false;
 
-  constructor(private fb: FormBuilder, private despachoService : DespachoService, private http: HttpClient) {}
+  constructor(private fb: FormBuilder, private despachoService: DespachoService, private http: HttpClient) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['tipoSalida'] || changes['subtipoSalida']) {
-      this.textoTitulo = TipoSalidaTexto[this.tipoSalida] + ' - ' +
-                         (this.tipoSalida == 1 ?
-                            TipoCedulaTexto[this.subtipoSalida as TipoCedulaEnum] :
-                            TipoMandamientoTexto[this.subtipoSalida as TipoMandamientoEnum]);
+      this.textoTitulo =
+        TipoSalidaTexto[this.tipoSalida] +
+        ' - ' +
+        (this.tipoSalida == 1
+          ? TipoCedulaTexto[this.subtipoSalida as TipoCedulaEnum]
+          : TipoMandamientoTexto[this.subtipoSalida as TipoMandamientoEnum]);
     }
   }
 
   ngOnInit(): void {
-    // cargar CSV
     this.cargarJuzgadosIntervinientes();
 
-    // inicializar formulario
     this.formulario = this.fb.group({
       organo: this.fb.group({
         organo: ['', [Validators.required]],
         juzgadoInterviniente: ['', [Validators.required]],
         juzgadoTribunal: ['', [Validators.required]],
-        direccionJuzgado: ['', [Validators.required]],
+        direccionJuzgado: ['', [Validators.required]]
       }),
       domicilioRequerido: this.fb.group({
         localidad: ['', [Validators.required, Validators.minLength(3)]],
@@ -82,16 +84,16 @@ export class SeleccionSalidaComponent implements OnInit {
       expediente: this.fb.group({
         tipoDiligencia: ['', [Validators.required]],
         caratulaExpediente: ['', [Validators.required]],
-        copiasTraslado: [false, [Validators.required]],
+        copiasTraslado: [false, [Validators.required]]
       }),
       caracter: this.fb.group({
         urgente: [false, [Validators.required]],
         habilitacionDiaHora: [false, [Validators.required]],
-        bajoResponsabilidad: [false, [Validators.required]],
+        bajoResponsabilidad: [false, [Validators.required]]
       }),
       tipoDomicilio: this.fb.group({
         denunciado: [false, [Validators.required]],
-        constituido: [false, [Validators.required]],
+        constituido: [false, [Validators.required]]
       }),
       facultadesAtribuciones: this.fb.group({
         allanamiento: [false, [Validators.required]],
@@ -100,21 +102,19 @@ export class SeleccionSalidaComponent implements OnInit {
         conCerrajero: [false, [Validators.required]],
         denunciaOtroDomicilio: [false, [Validators.required]],
         denunciaBienes: [false, [Validators.required]],
-        otros: [false, [Validators.required]],
+        otros: [false, [Validators.required]]
       }),
       textoContenido: this.fb.group({
         requerido: [''],
         montoCapitalTexto: [''],
         montoCapitalNumerico: [''],
         montoInteresesTexto: [''],
-        montoInteresesNumerico: [''],
-      }),
+        montoInteresesNumerico: ['']
+      })
     });
 
-    // Llamada al servicio para procesar el despacho
-    let datos = this.despachoService.procesarDespacho(this.textoDespacho, this.tipoSalida, this.subtipoSalida);
+    const datos = this.despachoService.procesarDespacho(this.textoDespacho, this.tipoSalida, this.subtipoSalida);
 
-    // Mapear los datos al formulario (incluyendo textoContenido)
     this.formulario.patchValue({
       organo: {
         organo: datos.organo.organo,
@@ -154,7 +154,6 @@ export class SeleccionSalidaComponent implements OnInit {
       }
     });
 
-    // transformar montos
     this.formulario.get('textoContenido.montoCapitalTexto')?.valueChanges.subscribe(valor => {
       const numericoControl = this.formulario.get('textoContenido.montoCapitalNumerico');
       const converted = this.montoTextoPipe.transform(valor);
@@ -167,59 +166,108 @@ export class SeleccionSalidaComponent implements OnInit {
       numericoControl?.setValue(converted, { emitEvent: false });
     });
 
-    // Si el form control juzgado cambia desde otra parte, actualizar filtro visible
     this.formulario.get('organo.juzgadoInterviniente')?.valueChanges.subscribe(v => {
       if (v !== this.filtroJuzgado) {
         this.filtroJuzgado = v || '';
-        // actualizar la lista filtrada para que coincida con el nuevo valor
         this.applyFilter(this.filtroJuzgado);
+      }
+    });
+
+    setTimeout(() => this.intentarMapearOrganoDesdeCsv(), 0);
+  }
+
+  private cargarJuzgadosIntervinientes() {
+    this.http.get('assets/database/direcciones-juzgados.csv', { responseType: 'text' }).subscribe({
+      next: csv => {
+        const parseResult = Papa.parse(csv, {
+          header: true,
+          skipEmptyLines: true,
+          transformHeader: h => h.trim()
+        });
+
+        let rows = (parseResult.data as any[])
+          .map((row: any) => {
+            const juzgado = (
+              row.juzgado ||
+              row.JUZGADO ||
+              row['Juzgado Interviniente'] ||
+              row['Juzgado'] ||
+              ''
+            )
+              .toString()
+              .trim();
+            const direccion = (
+              row.direccion ||
+              row.DIRECCION ||
+              row['Direccion'] ||
+              row['Dirección'] ||
+              ''
+            )
+              .toString()
+              .trim();
+            return { juzgado, direccion, raw: row };
+          })
+          .filter(r => r.juzgado && r.juzgado.length > 0);
+
+        if (!rows.length) {
+          const retry = Papa.parse(csv, { header: false, skipEmptyLines: true });
+          rows = (retry.data as any[])
+            .map((r: any) => {
+              const juzgado = Array.isArray(r) ? (r[0] || '').toString().trim() : '';
+              const direccion = Array.isArray(r) ? (r[1] || '').toString().trim() : '';
+              return { juzgado, direccion, raw: r };
+            })
+            .filter(r => r.juzgado && r.juzgado.length > 0);
+        }
+
+        this.juzgadosIntervinientes = rows;
+        this.juzgadosFiltrados = [...this.juzgadosIntervinientes];
+        this.intentarMapearOrganoDesdeCsv();
+      },
+      error: err => {
+        console.error('Error cargando direcciones-juzgados.csv', err);
+        this.juzgadosIntervinientes = [];
+        this.juzgadosFiltrados = [];
       }
     });
   }
 
-  // ---------------- CSV load (sin id) ----------------
-  private cargarJuzgadosIntervinientes() {
-    this.http.get('assets/database/direcciones-juzgados.csv', { responseType: 'text' })
-      .subscribe({
-        next: csv => {
-          const parseResult = Papa.parse(csv, {
-            header: true,
-            skipEmptyLines: true,
-            transformHeader: h => h.trim()
-          });
-
-          let rows = (parseResult.data as any[]).map((row: any) => {
-            const juzgado = (row.juzgado || row.JUZGADO || row['Juzgado Interviniente'] || row['Juzgado'] || '').toString().trim();
-            const direccion = (row.direccion || row.DIRECCION || row['Direccion'] || row['Dirección'] || '').toString().trim();
-            return { juzgado, direccion, raw: row };
-          }).filter(r => r.juzgado && r.juzgado.length > 0);
-
-          if (!rows.length) {
-            const retry = Papa.parse(csv, { header: false, skipEmptyLines: true });
-            rows = (retry.data as any[]).map((r: any) => {
-              const juzgado = Array.isArray(r) ? (r[0] || '').toString().trim() : '';
-              const direccion = Array.isArray(r) ? (r[1] || '').toString().trim() : '';
-              return { juzgado, direccion, raw: r };
-            }).filter(r => r.juzgado && r.juzgado.length > 0);
-          }
-
-          this.juzgadosIntervinientes = rows;
-          this.juzgadosFiltrados = [...this.juzgadosIntervinientes];
-        },
-        error: err => {
-          console.error('Error cargando direcciones-juzgados.csv', err);
-          this.juzgadosIntervinientes = [];
-          this.juzgadosFiltrados = [];
-        }
-      });
+  private normalizarClave(v: string): string {
+    return (v || '')
+      .toUpperCase()
+      .replace(/\s+/g, ' ')
+      .replace(/[º°]/g, 'Nº')
+      .trim();
   }
 
-  // ---------------- FILTRADO EN VIVO (sin debounce) ----------------
+  private intentarMapearOrganoDesdeCsv() {
+    if (!this.formulario) return;
+    const actual = (this.formulario.get('organo.organo')?.value || '').trim();
+    if (!actual || !this.juzgadosIntervinientes.length) return;
+
+    const claveActual = this.normalizarClave(actual);
+    const match = this.juzgadosIntervinientes.find(r => {
+      const claveJ = this.normalizarClave(r.juzgado);
+      return claveJ === claveActual || claveJ.includes(claveActual) || claveActual.includes(claveJ);
+    });
+
+    if (match) {
+      this.formulario.patchValue({
+        organo: {
+          organo: match.juzgado,
+          juzgadoInterviniente: match.juzgado,
+          juzgadoTribunal: match.juzgado,
+          direccionJuzgado: match.direccion || ''
+        }
+      });
+      this.filtroJuzgado = match.juzgado;
+      this.applyFilter(this.filtroJuzgado);
+    }
+  }
+
   onFiltroJuzgado(valor: string) {
     this.filtroJuzgado = (valor ?? '').toString();
-    // Al tipear, permitimos que se abra de nuevo
     this.suppressOpen = false;
-    // aplicar filtro en vivo: mostrar solo los que contengan el término (case-insensitive)
     this.applyFilter(this.filtroJuzgado);
     this.openDropdown = true;
     this.highlightedIndex = -1;
@@ -228,50 +276,44 @@ export class SeleccionSalidaComponent implements OnInit {
   private applyFilter(term: string) {
     const q = (term || '').trim().toLowerCase();
     if (!q) {
-      // si no hay término, mostramos todo
       this.juzgadosFiltrados = [...this.juzgadosIntervinientes];
       return;
     }
-    this.juzgadosFiltrados = this.juzgadosIntervinientes.filter(item => item.juzgado.toLowerCase().includes(q));
+    this.juzgadosFiltrados = this.juzgadosIntervinientes.filter(item =>
+      item.juzgado.toLowerCase().includes(q)
+    );
   }
 
-  // ---------------- Selección ----------------
-  chooseJuzgado(item: { juzgado: string, direccion?: string }) {
+  chooseJuzgado(item: { juzgado: string; direccion?: string }) {
     if (!item) return;
-    // setear el form control del juzgado y la direccion
+    this.formulario.get('organo.organo')?.setValue(item.juzgado);
     this.formulario.get('organo.juzgadoInterviniente')?.setValue(item.juzgado);
-      this.formulario.get('organo.juzgadoTribunal')?.setValue(item.juzgado);
+    this.formulario.get('organo.juzgadoTribunal')?.setValue(item.juzgado);
     this.formulario.get('organo.direccionJuzgado')?.setValue(item.direccion || '');
-    // cerrar dropdown y evitar reapertura por focus hasta que se escriba
     this.openDropdown = false;
     this.highlightedIndex = -1;
     this.suppressOpen = true;
-
-    // devolver foco al input por si querés seguir escribiendo (opcional)
     setTimeout(() => {
-      try { this.juzgadoInput?.nativeElement.focus(); } catch (e) {}
+      try {
+        this.organoInput?.nativeElement.focus();
+      } catch {}
     }, 0);
   }
 
   onBlurDropdown() {
-    // delay corto para permitir que el click en la lista se procese antes de decidir cerrar
     setTimeout(() => {
       if (this.preventClose) {
-        // Se hizo mousedown dentro de la lista; mantener abierto (chooseJuzgado cerrará)
         this.preventClose = false;
         return;
       }
-      if (this.pointerOverList) {
-        // El mouse está sobre la lista: mantener abierto para permitir scroll/interacción.
-        return;
-      }
-      // Si no hay interacción en la lista, cerrar
+      if (this.pointerOverList) return;
       this.openDropdown = false;
     }, 150);
   }
 
-  // ---------------- Navegacion por teclado ----------------
-  highlight(i: number) { this.highlightedIndex = i; }
+  highlight(i: number) {
+    this.highlightedIndex = i;
+  }
 
   onKeydown(event: KeyboardEvent) {
     if (!this.openDropdown && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
@@ -293,12 +335,13 @@ export class SeleccionSalidaComponent implements OnInit {
         if (this.highlightedIndex >= 0 && this.highlightedIndex < this.juzgadosFiltrados.length) {
           this.chooseJuzgado(this.juzgadosFiltrados[this.highlightedIndex]);
         } else {
-          // si no hay resaltado, intentar hacer match exacto por texto escrito
           const current = (this.filtroJuzgado || '').trim();
-          if (current) {
-            const found = this.juzgadosIntervinientes.find(i => i.juzgado.toLowerCase() === current.toLowerCase());
-            if (found) this.chooseJuzgado(found);
-          }
+            if (current) {
+              const found = this.juzgadosIntervinientes.find(
+                i => i.juzgado.toLowerCase() === current.toLowerCase()
+              );
+              if (found) this.chooseJuzgado(found);
+            }
         }
       } else if (event.key === 'Escape') {
         this.openDropdown = false;
@@ -314,30 +357,25 @@ export class SeleccionSalidaComponent implements OnInit {
   }
 
   onFocusInput() {
-    // Solo abrimos el dropdown con focus si no estamos en modo "suppressOpen"
     if (!this.suppressOpen) {
       this.openDropdown = true;
     } else {
-      // si está suprimido, no abrimos; el usuario debe escribir para reiniciar
       this.openDropdown = false;
     }
   }
 
-  // ---------------- Resto de tu código (mapSalida, onSubmit, validators...) ----------------
   onSubmit() {
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
       Object.keys(this.formulario.controls).forEach(key => {
         const control = this.formulario.get(key);
         if (control?.invalid) {
-          console.log(`❌ Campo inválido: ${key}`, control.errors);
+          console.log(`Campo inválido: ${key}`, control.errors);
         }
       });
       return;
     }
-
-    console.log(this.formulario.value);
-    var retorno = this.mapSalida();
+    const retorno = this.mapSalida();
     this.salidaSeleccionada.emit(retorno);
   }
 
@@ -345,108 +383,96 @@ export class SeleccionSalidaComponent implements OnInit {
     const retorno = new Salida();
     retorno.tipoSalida = this.tipoSalida;
 
-    // organo
     retorno.organo = this.formulario.get('organo.organo')?.value || '';
     retorno.juzgadoInterviniente = this.formulario.get('organo.juzgadoInterviniente')?.value || '';
     retorno.juzgadoTribunal = this.formulario.get('organo.juzgadoTribunal')?.value || '';
     retorno.direccionJuzgado = this.formulario.get('organo.direccionJuzgado')?.value || '';
 
-    // domicilioRequerido
     retorno.localidad = this.formulario.get('domicilioRequerido.localidad')?.value || '';
     retorno.domicilio = this.formulario.get('domicilioRequerido.domicilio')?.value || '';
 
     const nroVal = this.formulario.get('domicilioRequerido.nro')?.value;
-    retorno.nro = (nroVal === null || nroVal === undefined || nroVal === '') ? null : (isNaN(Number(nroVal)) ? null : Number(nroVal));
+    retorno.nro =
+      nroVal === null || nroVal === undefined || nroVal === ''
+        ? null
+        : isNaN(Number(nroVal))
+        ? null
+        : Number(nroVal);
 
     const pisoVal = this.formulario.get('domicilioRequerido.piso')?.value;
-    retorno.piso = (pisoVal === null || pisoVal === undefined || pisoVal === '') ? null : (isNaN(Number(pisoVal)) ? null : Number(pisoVal));
+    retorno.piso =
+      pisoVal === null || pisoVal === undefined || pisoVal === ''
+        ? null
+        : isNaN(Number(pisoVal))
+        ? null
+        : Number(pisoVal);
 
     retorno.depto = this.formulario.get('domicilioRequerido.depto')?.value || '';
     retorno.unidad = this.formulario.get('domicilioRequerido.unidad')?.value || '';
 
-    // expediente
     retorno.tipoDiligencia = this.formulario.get('expediente.tipoDiligencia')?.value || '';
     retorno.caratulaExpediente = this.formulario.get('expediente.caratulaExpediente')?.value || '';
     retorno.copiasTraslado = !!this.formulario.get('expediente.copiasTraslado')?.value;
 
-    // caracter
     retorno.urgente = !!this.formulario.get('caracter.urgente')?.value;
     retorno.habilitacionDiaHora = !!this.formulario.get('caracter.habilitacionDiaHora')?.value;
     retorno.bajoResponsabilidad = !!this.formulario.get('caracter.bajoResponsabilidad')?.value;
 
-    // tipoDomicilio
     retorno.denunciado = !!this.formulario.get('tipoDomicilio.denunciado')?.value;
     retorno.constituido = !!this.formulario.get('tipoDomicilio.constituido')?.value;
 
-    // facultadesAtribuciones
     retorno.allanamiento = !!this.formulario.get('facultadesAtribuciones.allanamiento')?.value;
     retorno.allanamientoDomicilioSinOcupantes = !!this.formulario.get('facultadesAtribuciones.allanamientoDomicilioSinOcupantes')?.value;
     retorno.auxilioFuerzaPublica = !!this.formulario.get('facultadesAtribuciones.auxilioFuerzaPublica')?.value;
     retorno.conCerrajero = !!this.formulario.get('facultadesAtribuciones.conCerrajero')?.value;
     retorno.denunciaOtroDomicilio = !!this.formulario.get('facultadesAtribuciones.denunciaOtroDomicilio')?.value;
     retorno.denunciaBienes = !!this.formulario.get('facultadesAtribuciones.denunciaBienes')?.value;
+    retorno.otrosFacultades = this.formulario.get('facultadesAtribuciones.otros')?.value ? 'SI' : 'NO';
 
-    const otrosFlag = this.formulario.get('facultadesAtribuciones.otros')?.value;
-    retorno.otrosFacultades = otrosFlag ? 'SI' : 'NO';
-
-    // textoContenido (nuevo)
     retorno.textoRequerido = this.formulario.get('textoContenido.requerido')?.value || '';
     retorno.montoCapitalTexto = this.formulario.get('textoContenido.montoCapitalTexto')?.value || '';
     const montoCapNumControlVal = this.formulario.get('textoContenido.montoCapitalNumerico')?.value;
-    const montoCapNum = (montoCapNumControlVal !== null && montoCapNumControlVal !== undefined)
-      ? String(montoCapNumControlVal).replace(/^\(\s*/, '').replace(/\s*\)$/, '')
-      : '';
+    const montoCapNum =
+      montoCapNumControlVal !== null && montoCapNumControlVal !== undefined
+        ? String(montoCapNumControlVal).replace(/^\(\s*/, '').replace(/\s*\)$/, '')
+        : '';
     retorno.montoCapitalNumerico = montoCapNum.trim() !== '' ? montoCapNum : null;
 
     retorno.montoInteresesTexto = this.formulario.get('textoContenido.montoInteresesTexto')?.value || '';
     const montoIntNumControlVal = this.formulario.get('textoContenido.montoInteresesNumerico')?.value;
-    const montoIntNum = (montoIntNumControlVal !== null && montoIntNumControlVal !== undefined)
-      ? String(montoIntNumControlVal).replace(/^\(\s*/, '').replace(/\s*\)$/, '')
-      : '';
+    const montoIntNum =
+      montoIntNumControlVal !== null && montoIntNumControlVal !== undefined
+        ? String(montoIntNumControlVal).replace(/^\(\s*/, '').replace(/\s*\)$/, '')
+        : '';
     retorno.montoInteresesNumerico = montoIntNum.trim() !== '' ? montoIntNum : null;
 
     return retorno;
   }
 
-  // Helper para convertir booleanos a "SI"/"NO"
-  private boolToSiNo(value: any): string {
-    return value ? 'SI' : 'NO';
-  }
-
   campoInvalido(path: string): boolean {
-    let control = this.formulario.get(path);
-    return control ? control.invalid && control.touched : false;
+    const control = this.formulario.get(path);
+    return !!(control && control.invalid && control.touched);
   }
 
   nroValidator(control: any) {
-    let value = control.value;
-    // Acepta "S/N" o valores numéricos (incluyendo 0)
-    if (value === 'S/N' || value === 's/n' || /^[0-9]+$/.test(value)) {
-      return null; // Si es válido, no devuelve error
-    }
-    return { invalidNro: true }; // Si no es válido, devuelve error
+    const value = control.value;
+    if (value === 'S/N' || value === 's/n' || /^[0-9]+$/.test(value)) return null;
+    return { invalidNro: true };
   }
 
-  // llamado cuando el puntero entra en la lista (incluye cuando volvés a la lista para scrollear)
   onListMouseEnter() {
     this.pointerOverList = true;
   }
-
-  // llamado cuando el puntero sale de la lista
   onListMouseLeave() {
     this.pointerOverList = false;
-    // Si el input no tiene foco, cerramos el dropdown al salir
     setTimeout(() => {
-      const inputHasFocus = this.juzgadoInput && document.activeElement === this.juzgadoInput.nativeElement;
+      const inputHasFocus =
+        this.organoInput && document.activeElement === this.organoInput.nativeElement;
       if (!inputHasFocus) this.openDropdown = false;
     }, 100);
   }
-
-  // mousedown en la lista (cuando hacés click): evita que el blur cierre el dropdown
-  onListMouseDown(event: MouseEvent) {
-    // marcamos preventClose para que onBlurDropdown lo detecte
+  onListMouseDown() {
     this.preventClose = true;
-    // liberamos la marca después de un rato para evitar bloqueos
-    setTimeout(() => { this.preventClose = false; }, 250);
+    setTimeout(() => (this.preventClose = false), 250);
   }
 }

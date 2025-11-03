@@ -20,10 +20,9 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .card-header {
-        border: 0px;
-        border-bottom: 2px solid var(--bs-primary);
         background-color: #fff;
-}
+        border: 0px;
+      }
 
 .editable {
         display: inline-block;
@@ -79,4 +78,27 @@ input[type="number"]::-webkit-inner-spin-button {
     padding: 0.65rem 1.25rem;
     bottom: 15px;
   }
+}
+
+.domicilio-requerido {
+  border-radius: 0.5rem;
+  border: 2px solid var(--bs-primary);
+  position: relative; /* Necesario para posicionar el texto dentro */
+  padding-bottom: 1.5rem; /* Da espacio para que el texto no quede encima del borde */
+}
+
+.domicilio-requerido::after {
+  content: "Obligatorio";
+  position: absolute;
+  bottom: -0.8rem; /* Ajusta la distancia desde el borde */
+  right: 1rem; /* Alineado a la derecha */
+  background-color: white; /* Fondo para que no se mezcle con el borde */
+  color: var(--bs-primary);
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 0 0.25rem;
+}
+
+.header-subrayado {
+        border-bottom: 2px solid var(--bs-primary);
 }
