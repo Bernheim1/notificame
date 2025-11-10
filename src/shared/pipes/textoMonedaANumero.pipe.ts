@@ -7,13 +7,14 @@
 // - Devuelve siempre el formato: "($ 52.734,59)"
 // - Si no hay valor inicial devuelve ($ 0,00)
 
-import { Pipe, PipeTransform } from '@angular/core';
+import { Injectable, Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
   name: 'wordsToCurrency',
   pure: true,
   standalone: true
 })
+@Injectable({ providedIn: 'root' })
 export class TextoMonedaANumeroPipe implements PipeTransform {
 
   transform(value: string | number | null | undefined): string {

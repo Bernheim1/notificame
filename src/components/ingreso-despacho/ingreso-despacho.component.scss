@@ -20,7 +20,7 @@ left: 0;
 bottom: 5px; /* Ajusta la posición del subrayado */
 width: 0;
 z-index: -2;
-height: 4px; /* Grosor del subrayado */
+height: 2px; /* Grosor del subrayado */
 background-color: var(--bs-primary); /* Color del subrayado */
 animation: subrayado 1s linear infinite alternate; /* Animación */
 }
@@ -45,7 +45,7 @@ animation: subrayado 1s linear infinite alternate; /* Animación */
       bottom: 4px; // Ajusta la posición del subrayado
       width: 0;
       z-index: -2;
-      height: 4px; // Grosor del subrayado
+      height: 2px; // Grosor del subrayado
       background-color: var(--bs-primary); // Color del subrayado
   
       animation: subrayado 1s linear forwards;

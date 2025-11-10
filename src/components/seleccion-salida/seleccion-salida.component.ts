@@ -63,7 +63,7 @@ export class SeleccionSalidaComponent implements OnInit {
     }
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.cargarJuzgadosIntervinientes();
 
     this.formulario = this.fb.group({
@@ -113,7 +113,8 @@ export class SeleccionSalidaComponent implements OnInit {
       })
     });
 
-    const datos = this.despachoService.procesarDespacho(this.textoDespacho, this.tipoSalida, this.subtipoSalida);
+    await this.despachoService.inicializarCatalogoDesdeAssets();
+    const datos = await this.despachoService.procesarDespachoAsync(this.textoDespacho, this.tipoSalida, this.subtipoSalida);
 
     this.formulario.patchValue({
       organo: {

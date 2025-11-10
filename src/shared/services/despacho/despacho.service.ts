@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
 import { TipoCedulaEnum, TipoMandamientoEnum, TipoSalidaEnum } from '../../enums/tipo-salida-enum';
 import { PLANTILLAS } from '../despacho/despacho-plantillas.config';
+import { TextoMonedaANumeroPipe } from '../../pipes/textoMonedaANumero.pipe';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
 
 interface OrganoInfo {
   organo: string;
@@ -47,7 +50,37 @@ interface JuzgadoCatalogEntry {
 
 @Injectable({ providedIn: 'root' })
 export class DespachoService {
-  constructor() {}
+  constructor(private monedaPipe: TextoMonedaANumeroPipe, private http: HttpClient) {}
+
+  private catalogo: JuzgadoCatalogEntry[] = [];
+  private catalogoReady$ = new BehaviorSubject<boolean>(false);
+  private cargaEnCurso = false;
+
+  async inicializarCatalogoDesdeAssets(ruta: string = 'assets/database/direcciones-juzgados.csv'): Promise<void> {
+    if (this.catalogoReady$.value || this.cargaEnCurso) return;
+    this.cargaEnCurso = true;
+    try {
+      const csv = await firstValueFrom(this.http.get(ruta, { responseType: 'text' }));
+      this.usarCatalogoJuzgadosCSV(csv);
+      this.catalogoReady$.next(true);
+    } catch (e) {
+      console.warn('No se pudo cargar el catálogo de juzgados', e);
+      this.catalogoReady$.next(false);
+    } finally {
+      this.cargaEnCurso = false;
+    }
+  }
+
+  async procesarDespachoAsync(
+    despachoTexto: string,
+    tipoSalida: TipoSalidaEnum,
+    subtipoSalida: TipoCedulaEnum | TipoMandamientoEnum
+  ): Promise<any> {
+    if (!this.catalogoReady$.value) {
+      await this.inicializarCatalogoDesdeAssets();
+    }
+    return this.procesarDespacho(despachoTexto, tipoSalida, subtipoSalida);
+  }
 
   procesarDespacho(
     despachoTexto: string,
@@ -111,171 +144,259 @@ export class DespachoService {
       .replace(/\b([a-záéíóúñ]+)/g, w => w.charAt(0).toUpperCase() + w.slice(1));
   }
 
-  private catalogo: JuzgadoCatalogEntry[] = [];
-
   usarCatalogoJuzgados(rows: JuzgadoCatalogEntry[]) {
-    this.catalogo = (rows || []).filter(r => r?.juzgado);
+    this.catalogo = (rows || []).map(r => ({
+      juzgado: r.juzgado?.trim() || '',
+      direccion: r.direccion?.trim() || ''
+    }));
   }
+  
 
-  private normalizarClave(v: string): string {
-    return (v || '')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')     // sin acentos
-      .toUpperCase()
-      .replace(/N(°|º)/g, 'Nº')            // N° / Nº -> Nº
-      .replace(/\bNRO\b/g, 'Nº')           // NRO -> Nº
-      .replace(/N\s*(?=\d)/g, 'Nº ')       // N [espacios] dígito -> Nº dígito
-      .replace(/\bNO?\b(?=\s*\d)/g, 'Nº')  // N / No antes de número -> Nº
-      .replace(/\s*-\s*/g, ' ')            // guiones como espacio
-      .replace(/[\.,"]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+  usarCatalogoJuzgadosCSV(csvTexto: string) {
+    if (!csvTexto) {
+      console.warn('CSV vacío');
+      return;
+    }
+    
+    const lineas = csvTexto
+      .replace(/\r/g, '')
+      .split('\n')
+      .map(l => l.trim())
+      .filter(l => l && !l.startsWith('//'));
+
+    const parsed: JuzgadoCatalogEntry[] = [];
+    
+    for (const linea of lineas) {
+      // Formato esperado: Juzgado..., "Dirección..."
+      const match = linea.match(/^([^"]+),\s*"([^"]+)"$/);
+      if (match) {
+        parsed.push({
+          juzgado: match[1].trim(),
+          direccion: match[2].trim()
+        });
+      } else {
+        // Línea sin dirección o formato diferente
+        const partes = linea.split(',');
+        if (partes.length >= 1) {
+          parsed.push({
+            juzgado: partes[0].trim(),
+            direccion: partes[1]?.replace(/"/g, '').trim() || ''
+          });
+        }
+      }
+    }
+
+    this.usarCatalogoJuzgados(parsed);
+    console.log(`✅ Catálogo cargado: ${parsed.length} juzgados`);
   }
 
   // ---------------- Órgano ----------------
-  extraerJuzgado(texto: string): OrganoInfo {
+  extraerJuzgado(texto: string): OrganoInfo & { direccionJuzgado: string; juzgadoTribunal: string } {
     let organo = '';
     let juzgadoInterviniente = '';
     let juzgadoTribunal = '';
     let direccionJuzgado = '';
 
-    const re = /JUZGADO EN LO CIVIL Y COMERCIAL N[º°]?\s*\d+\s*(?:-\s*[A-ZÁÉÍÓÚÑa-záéíóúñ]+)?/i;
-    const m = texto.match(re);
-    if (m) {
-      // uniformar Nº antes de capitalizar
-      const detectadoRaw = m[0].replace(/N\s*(\d)/i, 'Nº $1');
-      const detectado = this.capitalizarFrase(detectadoRaw);
-      organo = detectado;
-      juzgadoInterviniente = detectado;
-      juzgadoTribunal = detectado;
+    const patrones = [
+      /JUZGADO\s+EN\s+LO\s+CIVIL\s+Y\s+COMERCIAL\s+N[º°]?\s*\d+\s*(?:-\s*[A-ZÁÉÍÓÚÑa-záéíóúñ]+)?/i,
+      /JUZGADO\s+CIVIL\s+Y\s+COMERCIAL\s+N[º°]?\s*\d+\s*(?:-\s*[A-ZÁÉÍÓÚÑa-záéíóúñ]+)?/i,
+      /JUZGADO\s+EN\s+LO\s+CIVIL\s+Y\s+COMERCIAL\s+N\s*\d+\s*(?:-\s*[A-ZÁÉÍÓÚÑa-záéíóúñ]+)?/i,
+      /JUZGADO\s+CIVIL\s+Y\s+COMERCIAL\s+N\s*\d+\s*(?:-\s*[A-ZÁÉÍÓÚÑa-záéíóúñ]+)?/i
+    ];
 
-      const encontrado = this.findCatalogEntry(detectado);
-      if (encontrado) {
-        organo = encontrado.juzgado;
-        juzgadoInterviniente = encontrado.juzgado;
-        juzgadoTribunal = encontrado.juzgado;
-        direccionJuzgado = encontrado.direccion || '';
+    let detectado = '';
+    for (const r of patrones) {
+      const m = texto.match(r);
+      if (m) { detectado = m[0]; break; }
+    }
+    if (!detectado) return { organo, juzgadoInterviniente, direccionJuzgado, juzgadoTribunal };
+
+    detectado = this.capitalizarFrase(detectado.trim());
+    organo = juzgadoInterviniente = juzgadoTribunal = detectado;
+
+    const mejor = this.matchJuzgadoCatalogoFlexible(detectado);
+    if (mejor) {
+      organo = mejor.juzgado;
+      juzgadoInterviniente = mejor.juzgado;
+      juzgadoTribunal = mejor.juzgado;
+      direccionJuzgado = mejor.direccion || '';
+    }
+
+    return { organo, juzgadoInterviniente, direccionJuzgado, juzgadoTribunal };
+  }
+
+  private normalizarClaveJuzgado(texto: string): string {
+    if (!texto) return '';
+    
+    return texto
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/juzgado\s+en\s+lo\s+civil\s+y\s+comercial/g, 'juzgado civil comercial')
+      .replace(/juzgado\s+civil\s+y\s+comercial/g, 'juzgado civil comercial')
+      .replace(/juzgado\s+de\s+paz\s+letrado/g, 'juzgado paz letrado')
+      .replace(/\bn[º°]+/g, 'n')
+      .replace(/\bnro\.?/g, 'n')
+      .replace(/\bn\s*(\d+)/g, 'n$1')
+      .replace(/\s*-\s*/g, ' ')
+      .replace(/[,.;:"()]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private extraerNumeroJuzgado(textoNorm: string): string | null {
+    const match = textoNorm.match(/\bn(\d+)\b/);
+    return match ? match[1] : null;
+  }
+
+  private extraerCiudadJuzgado(textoNorm: string): string | null {
+    const partes = textoNorm.split(' ').filter(p => p.length > 2);
+    
+    for (let i = partes.length - 1; i >= 0; i--) {
+      const parte = partes[i];
+      if (!/^n?\d+$/.test(parte) && !['juzgado','civil','comercial','paz'].includes(parte)) {
+        return parte;
       }
     }
-    return { organo, juzgadoInterviniente, juzgadoTribunal, direccionJuzgado };
+    return null;
   }
 
-    private extraerNumero(clave: string): string {
-    const m = clave.match(/Nº\s+(\d+)/);
-    return m ? m[1] : '';
+  private extraerPalabrasClaveJuzgado(textoNorm: string): string[] {
+    const claves = ['civil', 'comercial', 'paz', 'letrado', 'penal', 'familia', 'trabajo', 'contencioso'];
+    return claves.filter(c => textoNorm.includes(c));
   }
 
-  private findCatalogEntry(detectado: string): JuzgadoCatalogEntry | undefined {
-    if (!detectado || !this.catalogo.length) return;
-    const claveDet = this.normalizarClave(detectado);
-    const numDet = this.extraerNumero(claveDet);
+  private matchJuzgadoCatalogoFlexible(detectado: string): JuzgadoCatalogEntry | undefined {
+    if (!this.catalogo?.length) {
+      console.warn('⚠️ Catálogo vacío - asegúrate de cargar el CSV primero');
+      return;
+    }
 
-    // 1. exacto
-    const exact = this.catalogo.find(c => this.normalizarClave(c.juzgado) === claveDet);
-    if (exact) return exact;
+    const detNorm = this.normalizarClaveJuzgado(detectado);
+    const numDet = this.extraerNumeroJuzgado(detNorm);
+    const ciudadDet = this.extraerCiudadJuzgado(detNorm);
 
-    // 2. mismo número
-    const mismosNum = this.catalogo.filter(c => this.extraerNumero(this.normalizarClave(c.juzgado)) === numDet);
-    if (mismosNum.length) {
-      // 2a exacto dentro de subconjunto
-      const exactNum = mismosNum.find(c => this.normalizarClave(c.juzgado) === claveDet);
-      if (exactNum) return exactNum;
-      // 2b inclusión (ciudad puede variar, acentos)
-      const inclNum = mismosNum.find(c => {
-        const kc = this.normalizarClave(c.juzgado);
-        return kc.includes(claveDet) || claveDet.includes(kc);
-      });
-      if (inclNum) return inclNum;
-      // 2c por ciudad (último token después del guión si existe)
-      const ciudadDet = claveDet.split(' - ').pop();
-      if (ciudadDet && ciudadDet.length > 2) {
-        const ciudadMatch = mismosNum.find(c => {
-          const kc = this.normalizarClave(c.juzgado);
-          return kc.endsWith(ciudadDet);
-        });
-        if (ciudadMatch) return ciudadMatch;
-      }
-      // 2d distancia (Levenshtein)
-      let mejor: { item: JuzgadoCatalogEntry; dist: number } | null = null;
-      for (const c of mismosNum) {
-        const kc = this.normalizarClave(c.juzgado);
-        const d = this.distancia(claveDet, kc);
-        const limite = Math.max(3, Math.floor(kc.length * 0.20));
-        if (d <= limite && (!mejor || d < mejor.dist)) {
-          mejor = { item: c, dist: d };
+    console.log('🔍 Detectado normalizado:', detNorm);
+    console.log('🔢 Número extraído:', numDet);
+    console.log('🌆 Ciudad extraída:', ciudadDet);
+
+    interface Candidato {
+      entry: JuzgadoCatalogEntry;
+      puntos: number;
+      detalles: string[];
+    }
+
+    const candidatos: Candidato[] = [];
+
+    for (const entry of this.catalogo) {
+      const catNorm = this.normalizarClaveJuzgado(entry.juzgado);
+      const numCat = this.extraerNumeroJuzgado(catNorm);
+      const ciudadCat = this.extraerCiudadJuzgado(catNorm);
+
+      let puntos = 0;
+      const detalles: string[] = [];
+
+      if (numDet && numCat) {
+        if (numDet === numCat) {
+          puntos += 500;
+          detalles.push(`num=${numDet}`);
+        } else {
+          continue;
         }
       }
-      if (mejor) return mejor.item;
-    }
 
-    // 3. fallback global inclusión
-    const incl = this.catalogo.find(c => {
-      const kc = this.normalizarClave(c.juzgado);
-      return kc.includes(claveDet) || claveDet.includes(kc);
-    });
-    if (incl) return incl;
+      if (ciudadDet && ciudadCat) {
+        if (ciudadDet === ciudadCat) {
+          puntos += 300;
+          detalles.push(`ciudad=${ciudadDet}`);
+        } else {
+          const distCiudad = this.calcularDistanciaTexto(ciudadDet, ciudadCat);
+          if (distCiudad <= 2) {
+            puntos += 150;
+            detalles.push(`ciudad~${ciudadCat}(dist:${distCiudad})`);
+          }
+        }
+      }
 
-    // 4. distancia global (último recurso)
-    let mejorGlobal: { item: JuzgadoCatalogEntry; dist: number } | null = null;
-    for (const c of this.catalogo) {
-      const kc = this.normalizarClave(c.juzgado);
-      const d = this.distancia(claveDet, kc);
-      const limite = Math.max(3, Math.floor(kc.length * 0.15));
-      if (d <= limite && (!mejorGlobal || d < mejorGlobal.dist)) {
-        mejorGlobal = { item: c, dist: d };
+      const palabrasDet = this.extraerPalabrasClaveJuzgado(detNorm);
+      const palabrasCat = this.extraerPalabrasClaveJuzgado(catNorm);
+      
+      palabrasDet.forEach(p => {
+        if (palabrasCat.includes(p)) {
+          puntos += 100;
+          detalles.push(`+${p}`);
+        }
+      });
+
+      const distTotal = this.calcularDistanciaTexto(detNorm, catNorm);
+      const longitudMax = Math.max(detNorm.length, catNorm.length);
+      const similitud = 1 - (distTotal / longitudMax);
+      const puntosSimil = Math.round(similitud * 200);
+      puntos += puntosSimil;
+      detalles.push(`sim=${(similitud * 100).toFixed(0)}%`);
+
+      if (distTotal <= 3) {
+        puntos += 150;
+        detalles.push('casi-exacto');
+      }
+
+      if (puntos > 0) {
+        candidatos.push({ entry, puntos, detalles });
       }
     }
-    return mejorGlobal?.item;
+
+    if (!candidatos.length) {
+      console.warn('❌ Sin candidatos');
+      return;
+    }
+
+    candidatos.sort((a, b) => b.puntos - a.puntos);
+
+    console.log('🏆 Top 3 candidatos:', candidatos.slice(0,3).map(c => ({
+      juzgado: c.entry.juzgado,
+      puntos: c.puntos,
+      detalles: c.detalles
+    })));
+
+    const mejor = candidatos[0];
+    const umbralMinimo = numDet ? 400 : 250;
+
+    if (mejor.puntos < umbralMinimo) {
+      console.warn(`⚠️ Mejor candidato con ${mejor.puntos} puntos (umbral: ${umbralMinimo})`);
+      return;
+    }
+
+    console.log('✅ Match encontrado:', mejor.entry.juzgado, '→', mejor.entry.direccion);
+    return mejor.entry;
   }
 
-    private distancia(a: string, b: string): number {
-    const A = a, B = b;
-    const m = A.length, n = B.length;
-    const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
-    for (let i = 0; i <= m; i++) dp[i][0] = i;
-    for (let j = 0; j <= n; j++) dp[0][j] = j;
-    for (let i = 1; i <= m; i++) {
-      for (let j = 1; j <= n; j++) {
-        const cost = A[i - 1] === B[j - 1] ? 0 : 1;
-        dp[i][j] = Math.min(
-          dp[i - 1][j] + 1,
-          dp[i][j - 1] + 1,
-          dp[i - 1][j - 1] + cost
+  private calcularDistanciaTexto(a: string, b: string): number {
+    if (a === b) return 0;
+    if (!a) return b.length;
+    if (!b) return a.length;
+
+    const matriz: number[][] = [];
+    
+    for (let i = 0; i <= a.length; i++) {
+      matriz[i] = [i];
+    }
+    for (let j = 0; j <= b.length; j++) {
+      matriz[0][j] = j;
+    }
+
+    for (let i = 1; i <= a.length; i++) {
+      for (let j = 1; j <= b.length; j++) {
+        const costo = a[i - 1] === b[j - 1] ? 0 : 1;
+        matriz[i][j] = Math.min(
+          matriz[i - 1][j] + 1,
+          matriz[i][j - 1] + 1,
+          matriz[i - 1][j - 1] + costo
         );
       }
     }
-    return dp[m][n];
+
+    return matriz[a.length][b.length];
   }
 
-  private catalogMatch(detectado: string): JuzgadoCatalogEntry | undefined {
-    // fuerza la variante Nº antes de normalizar
-    const detectadoAjustado = detectado.replace(/N\s*(\d)/i, 'Nº $1');
-    const claveDet = this.normalizarClave(detectadoAjustado);
-    if (!claveDet || !this.catalogo.length) return;
-
-    // exacto
-    let exact = this.catalogo.find(c => this.normalizarClave(c.juzgado) === claveDet);
-    if (exact) return exact;
-
-    // inclusión
-    let incl = this.catalogo.find(c => {
-      const k = this.normalizarClave(c.juzgado);
-      return k.includes(claveDet) || claveDet.includes(k);
-    });
-    if (incl) return incl;
-
-    // aproximado
-    let mejor: { item: JuzgadoCatalogEntry; score: number } | null = null;
-    for (const c of this.catalogo) {
-      const k = this.normalizarClave(c.juzgado);
-      const d = this.distancia(claveDet, k);
-      const lim = Math.max(3, Math.floor(k.length * 0.15));
-      if (d <= lim) {
-        if (!mejor || d < mejor.score) mejor = { item: c, score: d };
-      }
-    }
-    return mejor?.item;
-  }
 
   // ---------------- Expediente ----------------
   private extraerExpediente(texto: string): ExpedienteInfo {
@@ -333,66 +454,320 @@ export class DespachoService {
   }
 
   // ---------------- Texto contenido ----------------
+  private extraerRequerido(texto: string): string {
+    if (!texto) return 'NOMBRE REQUERIDO';
+
+    const original = texto;
+    const U = texto
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // sin acentos para facilitar patrones
+      .toUpperCase();
+
+    // Función de limpieza final del nombre capturado
+    const limpiar = (nombre: string): string => {
+      if (!nombre) return '';
+      return nombre
+        .replace(/^(SR\.?|SRA\.?|SRES\.?|SRAS\.?)\s+/i, '')
+        .replace(/\b(DNI|CUIT|CUIL)\b.*$/i, '')
+        .replace(/\b(POR LA SUMA|POR SUMA|POR\s+LA\b).*$/i, '')
+        .replace(/\bS\/.*$/i, '')
+        .replace(/[",.;:]+$/g, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    };
+
+    // PRIORIDAD 1: Frases de traslado / cédula (muy explícitas)
+    const patronesTraslado: RegExp[] = [
+      /C[ÓO]RRASE\s+TRASLADO\s+(?:AL?|A LA|A LOS|A LAS)?\s*(?:SRES?\.?|SRAS?\.?|SR\.?|SRA\.?)?\s*"?(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})(?:"|\s+S\/|\s+POR|\s+QUE|\s+CON|,|\.|$)/i,
+      /LIBRESE\s+(?:NUEVA\s+)?CEDULA(?:\s+DIRIGIDA)?\s+(?:AL?|A LA|A LOS|A LAS)\s*(?:SRES?\.?|SRAS?\.?|SR\.?|SRA\.?)?\s*"?(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})(?:"|\s+S\/|\s+POR|\s+QUE|\s+CON|,|\.|$)/i,
+      /TRASLADO\s+(?:AL?|A LA|A LOS|A LAS)\s*(?:SRES?\.?|SRAS?\.?|SR\.?|SRA\.?)?\s*"?(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})(?:"|\s+S\/|\s+POR|\s+QUE|\s+CON|,|\.|$)/i
+    ];
+    for (const r of patronesTraslado) {
+      const m = original.match(r);
+      if (m?.groups?.['nombre']) {
+        const candidato = limpiar(m.groups?.['nombre']);
+        if (candidato.length >= 3) return candidato;
+      }
+    }
+
+    // PRIORIDAD 2: "contra el ejecutado ..."
+    const pContra = /CONTRA\s+(?:EL|LA)?\s*(?:EJECUTAD[OA]\s*)?(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})(?=\s+POR\s+LA\s+SUMA|\s+PESOS|\s+QUE|\s+CON\b|,|\.|$)/i;
+    const mContra = original.match(pContra);
+    if (mContra?.groups?.['nombre']) {
+      const candidato = limpiar(mContra.groups?.['nombre']);
+      if (candidato) return candidato;
+    }
+
+    // PRIORIDAD 3: "ejecutado NOMBRE ..."
+    const pEjecutado = /EJECUTAD[OA]\s+(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})(?=\s+POR\s+LA\s+SUMA|\s+PESOS|\s+QUE|\s+CON\b|,|\.|$)/i;
+    const mEjec = original.match(pEjecutado);
+    if (mEjec?.groups?.['nombre']) {
+      const candidato = limpiar(mEjec.groups?.['nombre']);
+      if (candidato) return candidato;
+    }
+
+    // PRIORIDAD 4: AUTOS:"ACTOR C/ DEMANDADO S/ ..."
+    const pAutos = /AUTOS:"[^"]+?C\/\s*(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})\s*S\/[^"]*"/i;
+    const mAutos = original.match(pAutos);
+    if (mAutos?.groups?.['nombre']) {
+      const candidato = limpiar(mAutos.groups?.['nombre']);
+      if (candidato) return candidato;
+    }
+
+    // PRIORIDAD 5: Carátula: ACTOR C/ DEMANDADO S/
+    const pCaratula = /CAR[ÁA]TULA:\s*"?.+?C\/\s*(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})\s*S\/.*"?/i;
+    const mCaratula = original.match(pCaratula);
+    if (mCaratula?.groups?.['nombre']) {
+      const candidato = limpiar(mCaratula.groups?.['nombre']);
+      if (candidato) return candidato;
+    }
+
+    // PRIORIDAD 6: C/ DEMANDADO S/ (sin prefijos anteriores)
+    const pSimpleC = /C\/\s*(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})\s*S\/[A-ZÁÉÍÓÚÑ ]+/i;
+    const mSimpleC = original.match(pSimpleC);
+    if (mSimpleC?.groups?.['nombre']) {
+      const candidato = limpiar(mSimpleC.groups?.['nombre']);
+      if (candidato) return candidato;
+    }
+
+    // Fallback
+    return 'NOMBRE REQUERIDO';
+  }
+
+  // ---------------- Texto contenido ----------------
   private extraerTextoContenido(texto: string): TextoContenidoInfo {
-    let requerido = '';
-    const reqPatterns: RegExp[] = [
-      /CONTRA\s+(?:EL|LA)?\s*(?:EJECUTAD[OA]\s*)?([A-ZÁÉÍÓÚÑ ]{3,}?)(?=\s+POR\s+LA\s+SUMA|\s+PESOS|\s+CON\b)/i,
-      /EJECUTADO\s+([A-ZÁÉÍÓÚÑ ]{3,}?)(?=\s+POR\s+LA\s+SUMA|\s+PESOS|\s+CON\b)/i,
-      /C\/\s*([A-ZÁÉÍÓÚÑ ]{3,}?)(?=\s*S\/|$)/i
-    ];
-    for (const r of reqPatterns) {
-      const m = texto.match(r);
-      if (m && m[1]) {
-        requerido = m[1].trim();
-        break;
-      }
-    }
-    if (!requerido) {
-      const autos = texto.match(/AUTOS:"[^"]+C\/\s*([A-ZÁÉÍÓÚÑ ]+?)\s*S\/[^"]*"/i);
-      if (autos?.[1]) requerido = autos[1].trim();
-    }
-    if (!requerido) requerido = 'NOMBRE REQUERIDO';
-    requerido = requerido.replace(/\s+POR\s+LA\s+SUMA.*$/i, '').trim();
+    const requerido = this.extraerRequerido(texto);
+    const { montoCapitalTexto, montoCapitalNumerico } = this.extraerMontoCapital(texto);
+    const { montoInteresesTexto, montoInteresesNumerico } = this.extraerMontoIntereses(texto);
+    return {
+      requerido,
+      montoCapitalTexto,
+      montoCapitalNumerico,
+      montoInteresesTexto,
+      montoInteresesNumerico
+    };
+  }
 
-    const capitalRegexes: RegExp[] = [
-      /POR LA SUMA(?: RECLAMADA)? DE\s+PESOS\s+([A-ZÁÉÍÓÚÑ0-9\/ ]+?)\s+CON\s+([0-9]{2}\/[0-9]{2})\s*\(\$ ?([\d.,]+)\)\s*EN CONCEPTO DE CAPITAL/i,
-      /PESOS\s+([A-ZÁÉÍÓÚÑ0-9\/ ]+?)\s+CON\s+([0-9]{2}\/[0-9]{2})\s*\(\$ ?([\d.,]+)\)\s*EN CONCEPTO DE CAPITAL/i,
-      /PESOS\s+([A-ZÁÉÍÓÚÑ0-9\/ ]+?)\s+CON\s+([0-9]{2}\/[0-9]{2})\s*\(\$ ?([\d.,]+)\)/i
-    ];
+  private extraerMontoCapital(texto: string): { montoCapitalTexto: string; montoCapitalNumerico: string } {
+    if (!texto) return { montoCapitalTexto: 'MONTO CAPITAL', montoCapitalNumerico: '' };
+    const original = texto;
+    const normalizado = original
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ');
+
+    let inicio = [
+      'por la suma reclamada',
+      'por la suma',
+      'por las sumas',
+      'pesos '
+    ].map(k => normalizado.indexOf(k)).filter(i => i !== -1).sort((a,b)=>a-b)[0];
+    if (inicio === undefined) inicio = normalizado.indexOf('pesos ');
+    if (inicio === -1) inicio = 0;
+
+    const posConcepto = normalizado.indexOf('en concepto de capital', inicio);
+    const posIntereses = [normalizado.indexOf('con mas la suma', inicio), normalizado.indexOf('con más la suma', inicio)]
+      .filter(p => p !== -1).sort((a,b)=>a-b)[0];
+    let fin = posConcepto !== -1 ? posConcepto : (posIntereses !== undefined ? posIntereses : inicio + 400);
+    if (fin < inicio) fin = inicio + 400;
+
+    const originalCompact = original.replace(/\s+/g, ' ');
+    const segmento = originalCompact.slice(inicio, Math.min(fin + 100, originalCompact.length));
+
+    // Número monetario directo
+    const numeroMatch = segmento.match(/\(\$ ?([\d\.,]+)\)/);
+    const numeroBruto = numeroMatch ? numeroMatch[1] : '';
+
+    // Literal (para texto y posible conversión si no hay número)
+    let literal = '';
+    const regexLiteralPrincipal = /PESOS?\s+([A-ZÁÉÍÓÚÑa-záéíóúñ ,\.]+?)(?:\s+CON\s+[0-9]{1,3}\/[0-9]{1,3}|\s*\(\$|\s+EN\s+CONCEPTO|\s+CON\s+MAS|\s+CON\s+MÁS|$)/i;
+    const mLiteral = segmento.match(regexLiteralPrincipal);
+    if (mLiteral) {
+      literal = mLiteral[1];
+    } else {
+      const alt = /POR\s+LA\s+SUMA(?:\s+RECLAMADA)?\s+DE\s+PESOS?\s+([A-ZÁÉÍÓÚÑa-záéíóúñ ,\.]+?)(?:\s+CON\s+[0-9]{1,3}\/[0-9]{1,3}|\s*\(\$|\s+EN\s+CONCEPTO|$)/i.exec(segmento);
+      if (alt) literal = alt[1];
+    }
+    literal = this.limpiarLiteralCapital(literal);
+
+    // Fracción (para decidir si agregamos “CON X centavos” en texto, pero NO para numerizar)
+    const fraccionMatch = segmento.match(/CON\s+([0-9]{1,3}\/[0-9]{1,3})/i);
+    let sufijoCentavos = '';
+    if (fraccionMatch) {
+      const [numStr, denStr] = fraccionMatch[1].split('/');
+      const num = parseInt(numStr, 10);
+      const den = parseInt(denStr, 10);
+      if (den === 100 && num > 0) sufijoCentavos = ` CON ${this.numeroATexto(num)} centavos`;
+    }
+
+    // Construcción de texto capital (sin “CON 00/100” si es cero)
     let montoCapitalTexto = 'MONTO CAPITAL';
-    let montoCapitalNumerico = '';
-    for (const rg of capitalRegexes) {
-      const m = texto.match(rg);
-      if (m) {
-        montoCapitalTexto = `PESOS ${m[1].trim()} CON ${m[2]}`;
-        montoCapitalNumerico = `$ ${m[3]}`;
-        break;
-      }
+    if (literal) {
+      montoCapitalTexto = `PESOS ${literal}${sufijoCentavos}`;
+    } else if (!literal && numeroMatch) {
+      montoCapitalTexto = `PESOS (NUMERICO)${sufijoCentavos}`;
     }
 
-    const interesesRegexes: RegExp[] = [
-      /CON MÁS LA SUMA DE\s+PESOS\s+([A-ZÁÉÍÓÚÑ0-9\/ ]]+?)\s+CON\s+([0-9]{2}\/[0-9]{2})\s*\(\$ ?([\d.,]+)\)/i, // (typo bracket fixed below)
-      /CON MÁS LA SUMA DE\s+PESOS\s+([A-ZÁÉÍÓÚÑ0-9\/ ]+?)\s+CON\s+([0-9]{2}\/[0-9]{2})\s*\(\$ ?([\d.,]+)\)/i,
-      /CON MAS LA SUMA DE\s+PESOS\s+([A-ZÁÉÍÓÚÑ0-9\/ ]+?)\s+CON\s+([0-9]{2}\/[0-9]{2})\s*\(\$ ?([\d.,]+)\)/i
-    ];
-    let montoInteresesTexto = 'MONTO INTERESES';
-    let montoInteresesNumerico = '';
-    for (const ir of interesesRegexes) {
-      const m = texto.match(ir);
-      if (m) {
-        montoInteresesTexto = `PESOS ${m[1].trim()} CON ${m[2]}`;
-        montoInteresesNumerico = `$ ${m[3]}`;
-        break;
-      }
+    // Numerización: usar pipe
+    // 1) Si hay número explícito entre paréntesis -> pipe
+    // 2) Si no hay número pero sí literal -> intentar convertir literal (ej: "Treinta y Tres Mil ...")
+    let montoCapitalNumerico = '';
+    if (numeroBruto) {
+      montoCapitalNumerico = this.monedaPipe.transform(numeroBruto);
+    } else if (literal) {
+      const posible = this.monedaPipe.transform(literal);
+      if (posible) montoCapitalNumerico = posible;
     }
 
     return {
-      requerido,
       montoCapitalTexto: montoCapitalTexto.replace(/\s+/g, ' ').trim(),
-      montoCapitalNumerico,
-      montoInteresesTexto: montoInteresesTexto.replace(/\s+/g, ' ').trim(),
+      montoCapitalNumerico
+    };
+  }
+
+  private limpiarLiteralCapital(raw: string): string {
+    return (raw || '')
+      .replace(/EN\s+CONCEPTO\s+DE\s+CAPITAL.*$/i, '')
+      .replace(/CON\s+MAS\s+LA\s+SUMA.*$/i, '')
+      .replace(/CON\s+MÁS\s+LA\s+SUMA.*$/i, '')
+      .replace(/QUE\s+SE\s+PRESUPUESTA.*$/i, '')
+      .replace(/PARA\s+RESPONDER.*$/i, '')
+      .replace(/[",;:]+$/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  }
+
+  private numeroATexto(n: number): string {
+    const unidades = ['cero','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve'];
+    const especiales = ['diez','once','doce','trece','catorce','quince','dieciseis','diecisiete','dieciocho','diecinueve'];
+    const decenas = ['','diez','veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
+    if (n < 10) return unidades[n];
+    if (n < 20) return especiales[n-10];
+    if (n < 100) {
+      const d = Math.floor(n/10);
+      const u = n % 10;
+      if (u === 0) return decenas[d];
+      if (d === 2) return 'veinti' + unidades[u];
+      return decenas[d] + ' y ' + unidades[u];
+    }
+    if (n < 1000) {
+      const c = Math.floor(n/100);
+      const resto = n % 100;
+      const cientos = ['','ciento','doscientos','trescientos','cuatrocientos','quinientos','seiscientos','setecientos','ochocientos','novecientos'];
+      if (n === 100) return 'cien';
+      return cientos[c] + (resto ? ' ' + this.numeroATexto(resto) : '');
+    }
+    return String(n);
+  }
+
+  private extraerMontoIntereses(texto: string): { montoInteresesTexto: string; montoInteresesNumerico: string } {
+    if (!texto) return { montoInteresesTexto: 'MONTO INTERESES', montoInteresesNumerico: '' };
+    const original = texto;
+    const normalizado = original
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase()
+      .replace(/\s+/g,' ');
+
+    // Anclas de inicio (prioridad)
+    let inicio = [
+      'con mas la suma de pesos ',
+      'con más la suma de pesos ',
+      'con mas la suma de ',
+      'con más la suma de ',
+      'con mas la suma',
+      'con más la suma'
+    ].map(k => normalizado.indexOf(k)).filter(i => i !== -1).sort((a,b)=>a-b)[0];
+
+    if (inicio === undefined) {
+      // Buscar primer "pesos" después de palabra intereses
+      const posInteresesPal = normalizado.indexOf('intereses');
+      if (posInteresesPal !== -1) {
+        const posPesos = normalizado.indexOf('pesos ', posInteresesPal);
+        if (posPesos !== -1) inicio = posPesos;
+      }
+    }
+    if (inicio === undefined) return { montoInteresesTexto: 'MONTO INTERESES', montoInteresesNumerico: '' };
+
+    // Frases que marcan fin (antes de explicación de destino / costas)
+    const finFrases = [
+      'para responder a intereses',
+      'para responder intereses',
+      'para intereses',
+      'por intereses',
+      'por interes',
+      'para interes',
+      'que se presupuesta',
+      'costas del juicio',
+      'costas'
+    ];
+    let fin = -1;
+    for (const f of finFrases) {
+      const p = normalizado.indexOf(f, inicio);
+      if (p !== -1 && (fin === -1 || p < fin)) fin = p;
+    }
+    if (fin === -1 || fin < inicio) fin = inicio + 400;
+
+    const originalCompact = original.replace(/\s+/g,' ');
+    const segmento = originalCompact.slice(inicio, Math.min(fin + 60, originalCompact.length));
+
+    // Número monetario
+    const numeroMatch = segmento.match(/\(\$ ?([\d\.,]+)\)/);
+    const numeroBruto = numeroMatch ? numeroMatch[1] : '';
+    let montoInteresesNumerico = numeroBruto ? this.monedaPipe.transform(numeroBruto) : '';
+
+    // Fracción -> sólo para centavos (si >0)
+    const fraccionMatch = segmento.match(/CON\s+([0-9]{1,3}\/[0-9]{1,3})/i);
+    let sufijoCentavos = '';
+    if (fraccionMatch) {
+      const [numStr, denStr] = fraccionMatch[1].split('/');
+      const num = parseInt(numStr,10);
+      const den = parseInt(denStr,10);
+      if (den === 100 && num > 0) sufijoCentavos = ` CON ${this.numeroATexto(num)} centavos`;
+    }
+
+    // Literal (similar a capital)
+    let literal = '';
+    const regexLiteral = /PESOS?\s+([A-ZÁÉÍÓÚÑa-záéíóúñ ,\.]+?)(?:\s+CON\s+[0-9]{1,3}\/[0-9]{1,3}|\s*\(\$|\s+QUE\s+SE\s+PRESUPUESTA|\s+PARA\s+RESPONDER|\s+POR\s+INTERESES|\s+POR\s+INTERES|\s+PARA\s+INTERESES|\s+PARA\s+INTERES|$)/i;
+    const mLit = segmento.match(regexLiteral);
+    if (mLit) {
+      literal = mLit[1];
+    } else {
+      const alt = /CON\s+M[ÁA]S\s+LA\s+SUMA\s+DE\s+PESOS?\s+([A-ZÁÉÍÓÚÑa-záéíóúñ ,\.]+?)(?:\s+CON\s+[0-9]{1,3}\/[0-9]{1,3}|\s*\(\$|,|$)/i.exec(segmento);
+      if (alt) literal = alt[1];
+    }
+    literal = this.limpiarLiteralIntereses(literal);
+
+    let montoInteresesTexto = 'MONTO INTERESES';
+    if (literal) {
+      montoInteresesTexto = `PESOS ${literal}${sufijoCentavos}`;
+    } else if (!literal && numeroMatch) {
+      montoInteresesTexto = `PESOS (NUMERICO)${sufijoCentavos}`;
+    }
+
+    // Si no hubo número y sí literal, intentar conversión (palabras) con pipe
+    if (!montoInteresesNumerico && literal) {
+      const posible = this.monedaPipe.transform(literal);
+      if (posible) montoInteresesNumerico = posible;
+    }
+
+    return {
+      montoInteresesTexto: montoInteresesTexto.replace(/\s+/g,' ').trim(),
       montoInteresesNumerico
     };
+  }
+
+  private limpiarLiteralIntereses(raw: string): string {
+    return (raw || '')
+      .replace(/para responder a intereses.*$/i,'')
+      .replace(/para responder intereses.*$/i,'')
+      .replace(/que se presupuesta.*$/i,'')
+      .replace(/para intereses.*$/i,'')
+      .replace(/para interes.*$/i,'')
+      .replace(/por intereses.*$/i,'')
+      .replace(/por interes.*$/i,'')
+      .replace(/en concepto de intereses.*$/i,'')
+      .replace(/[",;:]+$/g,'')
+      .replace(/\s{2,}/g,' ')
+      .trim();
   }
 
   // ---------------- Plantilla ----------------
@@ -405,11 +780,5 @@ export class DespachoService {
       }
     });
     return resultado;
-  }
-
-  // ---------------- Extra ----------------
-  private extraerMontoNumericoDesdeTexto(montoTexto: string): string {
-    const match = montoTexto.match(/\(\$\s*([\d.,]+)\)/);
-    return match ? `$ ${match[1]}` : '';
   }
 }
