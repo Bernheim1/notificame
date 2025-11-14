@@ -197,24 +197,40 @@ export class DespachoService {
     let juzgadoTribunal = '';
     let direccionJuzgado = '';
 
+    // 1) Intento prioritario: línea con prefijo "JUZGADO:"
+    // Captura toda la línea hasta salto, permitiendo varias palabras después del número y el guión.
+    let detectado = '';
+    let labelFlag = false;
+    const prefijoMatch = texto.match(/JUZGADO:\s*(JUZGADO\s+[^\n]+)/i);
+    if (prefijoMatch) {
+      detectado = prefijoMatch[1].trim();
+      labelFlag = true;
+    }
+
+    // 2) Patrones si no hubo prefijo (ampliados para varias palabras tras el guión)
     const patrones = [
-      /JUZGADO\s+EN\s+LO\s+CIVIL\s+Y\s+COMERCIAL\s+N[º°]?\s*\d+\s*(?:-\s*[A-ZÁÉÍÓÚÑa-záéíóúñ]+)?/i,
-      /JUZGADO\s+CIVIL\s+Y\s+COMERCIAL\s+N[º°]?\s*\d+\s*(?:-\s*[A-ZÁÉÍÓÚÑa-záéíóúñ]+)?/i,
-      /JUZGADO\s+EN\s+LO\s+CIVIL\s+Y\s+COMERCIAL\s+N\s*\d+\s*(?:-\s*[A-ZÁÉÍÓÚÑa-záéíóúñ]+)?/i,
-      /JUZGADO\s+CIVIL\s+Y\s+COMERCIAL\s+N\s*\d+\s*(?:-\s*[A-ZÁÉÍÓÚÑa-záéíóúñ]+)?/i
+      /JUZGADO\s+EN\s+LO\s+CIVIL\s+Y\s+COMERCIAL\s+N[º°]?\s*\d+(?:\s*-\s*[A-ZÁÉÍÓÚÑa-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ]+)*)?/i,
+      /JUZGADO\s+CIVIL\s+Y\s+COMERCIAL\s+N[º°]?\s*\d+(?:\s*-\s*[A-ZÁÉÍÓÚÑa-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ]+)*)?/i,
+      /JUZGADO\s+EN\s+LO\s+CIVIL\s+Y\s+COMERCIAL\s+N\s*\d+(?:\s*-\s*[A-ZÁÉÍÓÚÑa-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ]+)*)?/i,
+      /JUZGADO\s+CIVIL\s+Y\s+COMERCIAL\s+N\s*\d+(?:\s*-\s*[A-ZÁÉÍÓÚÑa-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ]+)*)?/i
     ];
 
-    let detectado = '';
-    for (const r of patrones) {
-      const m = texto.match(r);
-      if (m) { detectado = m[0]; break; }
+    if (!detectado) {
+      for (const r of patrones) {
+        const m = texto.match(r);
+        if (m) { detectado = m[0]; break; }
+      }
     }
+
     if (!detectado) return { organo, juzgadoInterviniente, direccionJuzgado, juzgadoTribunal };
 
-    detectado = this.capitalizarFrase(detectado.trim());
+    // Limpieza mínima: colapsar espacios y quitar puntos finales
+    detectado = detectado.replace(/\s+/g, ' ').replace(/[.,;:\-]+\s*$/,'').trim();
+    detectado = this.capitalizarFrase(detectado);
+
     organo = juzgadoInterviniente = juzgadoTribunal = detectado;
 
-    const mejor = this.matchJuzgadoCatalogoFlexible(detectado);
+    const mejor = this.matchJuzgadoCatalogoFlexible(detectado, labelFlag);
     if (mejor) {
       organo = mejor.juzgado;
       juzgadoInterviniente = mejor.juzgado;
@@ -227,7 +243,6 @@ export class DespachoService {
 
   private normalizarClaveJuzgado(texto: string): string {
     if (!texto) return '';
-    
     return texto
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
@@ -248,16 +263,35 @@ export class DespachoService {
     return match ? match[1] : null;
   }
 
+  // (Se mantiene para compatibilidad; ahora sólo último token)
   private extraerCiudadJuzgado(textoNorm: string): string | null {
-    const partes = textoNorm.split(' ').filter(p => p.length > 2);
-    
-    for (let i = partes.length - 1; i >= 0; i--) {
-      const parte = partes[i];
-      if (!/^n?\d+$/.test(parte) && !['juzgado','civil','comercial','paz'].includes(parte)) {
-        return parte;
-      }
-    }
-    return null;
+    const zona = this.extraerZonaJuzgado(textoNorm);
+    if (!zona) return null;
+    const toks = zona.split(' ').filter(t => !['de','del','la','el','los','las'].includes(t));
+    return toks.length ? toks[toks.length - 1] : null;
+  }
+
+  private extraerZonaJuzgado(textoNorm: string): string | null {
+    // patrón: ... n14 <resto>
+    const m = textoNorm.match(/\bn\d+\b\s+(.*)$/);
+    if (!m) return null;
+    let zona = m[1]
+      .trim()
+      .replace(/\b(juzgado|civil|comercial|paz|letrado|penal|familia|trabajo|contencioso)\b/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!zona) return null;
+    // limitar a 6 tokens para evitar ruido excesivo
+    const tokens = zona.split(' ').slice(0, 6);
+    return tokens.join(' ');
+  }
+
+
+  private tokenizarZona(zona: string | null): string[] {
+    if (!zona) return [];
+    return zona
+      .split(' ')
+      .filter(t => t && !['de','del','la','el','los','las'].includes(t));
   }
 
   private extraerPalabrasClaveJuzgado(textoNorm: string): string[] {
@@ -265,36 +299,39 @@ export class DespachoService {
     return claves.filter(c => textoNorm.includes(c));
   }
 
-  private matchJuzgadoCatalogoFlexible(detectado: string): JuzgadoCatalogEntry | undefined {
+  private matchJuzgadoCatalogoFlexible(detectado: string, labelFlag: boolean = false): JuzgadoCatalogEntry | undefined {
     if (!this.catalogo?.length) {
-      console.warn('⚠️ Catálogo vacío - asegúrate de cargar el CSV primero');
+      console.warn('⚠️ Catálogo vacío - cargar CSV antes');
       return;
     }
 
     const detNorm = this.normalizarClaveJuzgado(detectado);
     const numDet = this.extraerNumeroJuzgado(detNorm);
-    const ciudadDet = this.extraerCiudadJuzgado(detNorm);
+    const zonaDet = this.extraerZonaJuzgado(detNorm);
+    const zonaTokensDet = this.tokenizarZona(zonaDet);
 
     console.log('🔍 Detectado normalizado:', detNorm);
     console.log('🔢 Número extraído:', numDet);
-    console.log('🌆 Ciudad extraída:', ciudadDet);
+    console.log('📍 Zona detectada:', zonaDet);
+    if (labelFlag) console.log('🏷️ Prefijo JUZGADO: aplicado (boost zona)');
 
     interface Candidato {
       entry: JuzgadoCatalogEntry;
       puntos: number;
       detalles: string[];
     }
-
     const candidatos: Candidato[] = [];
 
     for (const entry of this.catalogo) {
       const catNorm = this.normalizarClaveJuzgado(entry.juzgado);
       const numCat = this.extraerNumeroJuzgado(catNorm);
-      const ciudadCat = this.extraerCiudadJuzgado(catNorm);
+      const zonaCat = this.extraerZonaJuzgado(catNorm);
+      const zonaTokensCat = this.tokenizarZona(zonaCat);
 
       let puntos = 0;
       const detalles: string[] = [];
 
+      // Número (obligatorio si ambos)
       if (numDet && numCat) {
         if (numDet === numCat) {
           puntos += 500;
@@ -304,44 +341,64 @@ export class DespachoService {
         }
       }
 
-      if (ciudadDet && ciudadCat) {
-        if (ciudadDet === ciudadCat) {
-          puntos += 300;
-          detalles.push(`ciudad=${ciudadDet}`);
+      // Zona
+      if (zonaDet && zonaCat) {
+        if (zonaDet === zonaCat) {
+          puntos += 350;
+          detalles.push('zona=exacta');
         } else {
-          const distCiudad = this.calcularDistanciaTexto(ciudadDet, ciudadCat);
-          if (distCiudad <= 2) {
-            puntos += 150;
-            detalles.push(`ciudad~${ciudadCat}(dist:${distCiudad})`);
+          const inter = zonaTokensDet.filter(t => zonaTokensCat.includes(t));
+          if (inter.length) {
+            const esPrefijo = zonaTokensDet.every((t, i) => zonaTokensCat[i] === t);
+            if (esPrefijo) {
+              puntos += 320;
+              detalles.push(`zona=prefijo(${inter.join('+')})`);
+            } else {
+              puntos += 240;
+              detalles.push(`zona=inter(${inter.join('+')})`);
+            }
+          } else {
+            const baseDet = zonaTokensDet.slice(0, 2).join(' ');
+            const baseCat = zonaTokensCat.slice(0, 2).join(' ');
+            const distZona = this.calcularDistanciaTexto(baseDet, baseCat);
+            if (distZona <= 3) {
+              puntos += 140;
+              detalles.push(`zona~(dist:${distZona})`);
+            }
           }
+        }
+
+        // Boost adicional si vino de prefijo "JUZGADO:" y el catálogo incluye todos los tokens detectados
+        if (labelFlag && zonaTokensDet.length && zonaTokensDet.every(t => zonaTokensCat.includes(t))) {
+          puntos += 200;
+          detalles.push('boost=label+zona');
         }
       }
 
+      // Palabras clave
       const palabrasDet = this.extraerPalabrasClaveJuzgado(detNorm);
       const palabrasCat = this.extraerPalabrasClaveJuzgado(catNorm);
-      
       palabrasDet.forEach(p => {
         if (palabrasCat.includes(p)) {
-          puntos += 100;
+          puntos += 80;
           detalles.push(`+${p}`);
         }
       });
 
+      // Similaridad global (menor peso)
       const distTotal = this.calcularDistanciaTexto(detNorm, catNorm);
       const longitudMax = Math.max(detNorm.length, catNorm.length);
       const similitud = 1 - (distTotal / longitudMax);
-      const puntosSimil = Math.round(similitud * 200);
+      const puntosSimil = Math.round(similitud * 100);
       puntos += puntosSimil;
       detalles.push(`sim=${(similitud * 100).toFixed(0)}%`);
 
       if (distTotal <= 3) {
-        puntos += 150;
+        puntos += 110;
         detalles.push('casi-exacto');
       }
 
-      if (puntos > 0) {
-        candidatos.push({ entry, puntos, detalles });
-      }
+      if (puntos > 0) candidatos.push({ entry, puntos, detalles });
     }
 
     if (!candidatos.length) {
@@ -350,22 +407,34 @@ export class DespachoService {
     }
 
     candidatos.sort((a, b) => b.puntos - a.puntos);
-
-    console.log('🏆 Top 3 candidatos:', candidatos.slice(0,3).map(c => ({
+    console.log('🏆 Top 3 candidatos:', candidatos.slice(0, 3).map(c => ({
       juzgado: c.entry.juzgado,
       puntos: c.puntos,
       detalles: c.detalles
     })));
 
-    const mejor = candidatos[0];
-    const umbralMinimo = numDet ? 400 : 250;
+    // Override zona fuerte (si alguno contiene todos los tokens y está dentro de margen)
+    if (zonaTokensDet.length) {
+      const topPuntos = candidatos[0].puntos;
+      const grupo = candidatos.filter(c => topPuntos - c.puntos <= 20);
+      const preferente = grupo.find(c => {
+        const zCatTokens = this.tokenizarZona(this.extraerZonaJuzgado(this.normalizarClaveJuzgado(c.entry.juzgado)));
+        return zonaTokensDet.every(t => zCatTokens.includes(t));
+      });
+      if (preferente && preferente.entry !== candidatos[0].entry) {
+        console.log('➡️ Override por zona completa:', preferente.entry.juzgado);
+        return preferente.entry;
+      }
+    }
 
+    const mejor = candidatos[0];
+    const umbralMinimo = numDet ? 420 : 280;
     if (mejor.puntos < umbralMinimo) {
-      console.warn(`⚠️ Mejor candidato con ${mejor.puntos} puntos (umbral: ${umbralMinimo})`);
+      console.warn(`⚠️ Mejor candidato con ${mejor.puntos} (<${umbralMinimo})`);
       return;
     }
 
-    console.log('✅ Match encontrado:', mejor.entry.juzgado, '→', mejor.entry.direccion);
+    console.log('✅ Match seleccionado:', mejor.entry.juzgado, '→', mejor.entry.direccion);
     return mejor.entry;
   }
 
@@ -457,79 +526,88 @@ export class DespachoService {
   private extraerRequerido(texto: string): string {
     if (!texto) return 'NOMBRE REQUERIDO';
 
-    const original = texto;
-    const U = texto
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // sin acentos para facilitar patrones
-      .toUpperCase();
-
-    // Función de limpieza final del nombre capturado
-    const limpiar = (nombre: string): string => {
-      if (!nombre) return '';
-      return nombre
+    const limpiar = (nombre: string): string =>
+      (nombre || '')
         .replace(/^(SR\.?|SRA\.?|SRES\.?|SRAS\.?)\s+/i, '')
         .replace(/\b(DNI|CUIT|CUIL)\b.*$/i, '')
-        .replace(/\b(POR LA SUMA|POR SUMA|POR\s+LA\b).*$/i, '')
         .replace(/\bS\/.*$/i, '')
         .replace(/[",.;:]+$/g, '')
         .replace(/\s{2,}/g, ' ')
         .trim();
-    };
 
-    // PRIORIDAD 1: Frases de traslado / cédula (muy explícitas)
+    // PRIORIDAD 0: Carátula (si existe). Tomar texto entre C/ y S/
+    // Ej: SANBERCON S.R.L. C/ LARRETAPE GABRIELA ILEANA S/ COBRO EJECUTIVO
+    const caratulaLinea =
+      texto.match(/CAR[ÁA]TULA:\s*"?(.*?)(?:\n|$)/i);
+    if (caratulaLinea) {
+      const linea = caratulaLinea[1]
+        .replace(/"\s*$/,'')
+        .replace(/\s+/g,' ')
+        .trim()
+        .toUpperCase();
+
+      // Buscar segmento entre C/ y S/
+      const matchCS = linea.match(/C\/\s+([A-ZÁÉÍÓÚÑ .]+?)\s+S\//i);
+      if (matchCS) {
+        const candidato = limpiar(matchCS[1]);
+        if (candidato.length >= 3) return candidato;
+      }
+    }
+
+    // PRIORIDAD 1: Frases de traslado / cédula
     const patronesTraslado: RegExp[] = [
       /C[ÓO]RRASE\s+TRASLADO\s+(?:AL?|A LA|A LOS|A LAS)?\s*(?:SRES?\.?|SRAS?\.?|SR\.?|SRA\.?)?\s*"?(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})(?:"|\s+S\/|\s+POR|\s+QUE|\s+CON|,|\.|$)/i,
       /LIBRESE\s+(?:NUEVA\s+)?CEDULA(?:\s+DIRIGIDA)?\s+(?:AL?|A LA|A LOS|A LAS)\s*(?:SRES?\.?|SRAS?\.?|SR\.?|SRA\.?)?\s*"?(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})(?:"|\s+S\/|\s+POR|\s+QUE|\s+CON|,|\.|$)/i,
       /TRASLADO\s+(?:AL?|A LA|A LOS|A LAS)\s*(?:SRES?\.?|SRAS?\.?|SR\.?|SRA\.?)?\s*"?(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})(?:"|\s+S\/|\s+POR|\s+QUE|\s+CON|,|\.|$)/i
     ];
     for (const r of patronesTraslado) {
-      const m = original.match(r);
+      const m = texto.match(r);
       if (m?.groups?.['nombre']) {
-        const candidato = limpiar(m.groups?.['nombre']);
+        const candidato = limpiar(m.groups['nombre']);
         if (candidato.length >= 3) return candidato;
       }
     }
 
     // PRIORIDAD 2: "contra el ejecutado ..."
     const pContra = /CONTRA\s+(?:EL|LA)?\s*(?:EJECUTAD[OA]\s*)?(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})(?=\s+POR\s+LA\s+SUMA|\s+PESOS|\s+QUE|\s+CON\b|,|\.|$)/i;
-    const mContra = original.match(pContra);
+    const mContra = texto.match(pContra);
     if (mContra?.groups?.['nombre']) {
-      const candidato = limpiar(mContra.groups?.['nombre']);
+      const candidato = limpiar(mContra.groups['nombre']);
       if (candidato) return candidato;
     }
 
     // PRIORIDAD 3: "ejecutado NOMBRE ..."
-    const pEjecutado = /EJECUTAD[OA]\s+(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})(?=\s+POR\s+LA\s+SUMA|\s+PESOS|\s+QUE|\s+CON\b|,|\.|$)/i;
-    const mEjec = original.match(pEjecutado);
+    const pEjec = /EJECUTAD[OA]\s+(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})(?=\s+POR\s+LA\s+SUMA|\s+PESOS|\s+QUE|\s+CON\b|,|\.|$)/i;
+    const mEjec = texto.match(pEjec);
     if (mEjec?.groups?.['nombre']) {
-      const candidato = limpiar(mEjec.groups?.['nombre']);
+      const candidato = limpiar(mEjec.groups['nombre']);
       if (candidato) return candidato;
     }
 
     // PRIORIDAD 4: AUTOS:"ACTOR C/ DEMANDADO S/ ..."
     const pAutos = /AUTOS:"[^"]+?C\/\s*(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})\s*S\/[^"]*"/i;
-    const mAutos = original.match(pAutos);
+    const mAutos = texto.match(pAutos);
     if (mAutos?.groups?.['nombre']) {
-      const candidato = limpiar(mAutos.groups?.['nombre']);
+      const candidato = limpiar(mAutos.groups['nombre']);
       if (candidato) return candidato;
     }
 
-    // PRIORIDAD 5: Carátula: ACTOR C/ DEMANDADO S/
-    const pCaratula = /CAR[ÁA]TULA:\s*"?.+?C\/\s*(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})\s*S\/.*"?/i;
-    const mCaratula = original.match(pCaratula);
-    if (mCaratula?.groups?.['nombre']) {
-      const candidato = limpiar(mCaratula.groups?.['nombre']);
+    // PRIORIDAD 5: Carátula alternativa (si no se tomó antes y viene entre comillas)
+    const pCaratulaAlt = /CAR[ÁA]TULA:\s*"?.+?C\/\s*(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})\s*S\/.*"?/i;
+    const mCaratulaAlt = texto.match(pCaratulaAlt);
+    if (mCaratulaAlt?.groups?.['nombre']) {
+      const candidato = limpiar(mCaratulaAlt.groups['nombre']);
       if (candidato) return candidato;
     }
 
-    // PRIORIDAD 6: C/ DEMANDADO S/ (sin prefijos anteriores)
+    // PRIORIDAD 6: C/ DEMANDADO S/ (simple)
     const pSimpleC = /C\/\s*(?<nombre>[A-ZÁÉÍÓÚÑ ]{3,})\s*S\/[A-ZÁÉÍÓÚÑ ]+/i;
-    const mSimpleC = original.match(pSimpleC);
+    const mSimpleC = texto.match(pSimpleC);
     if (mSimpleC?.groups?.['nombre']) {
-      const candidato = limpiar(mSimpleC.groups?.['nombre']);
+      const candidato = limpiar(mSimpleC.groups['nombre']);
       if (candidato) return candidato;
     }
 
-    // Fallback
     return 'NOMBRE REQUERIDO';
   }
 
