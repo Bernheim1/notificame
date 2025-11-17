@@ -503,7 +503,7 @@ export class DespachoService {
   extraerFacultadesAtribuciones(texto: string): FacultadesInfo {
     const allanamiento = /allanamiento del domicilio|facúltese.*allanamiento|autorícese.*allanamiento|con facultad de allanamiento|\ballanamiento\b|para allanar|allanar/i.test(texto);
     const allanamientoDomicilioSinOcupantes = /inmueble.*desocupado|sin ocupantes|aunque no haya ocupantes|allanamiento sin ocupantes|siempre que no haya ocupantes|pudiendo allanar en caso de no haber ocupantes|pudiendose allanar en caso de no haber ocupantes/i.test(texto);
-    const auxilioFuerzaPublica = /fuerza pública|intervención policial|pudiendo requerir fuerza pública|con auxilio de la fuerza pública|con el auxilio de la fuerza pública|\bpolicía\b/i.test(texto);
+    const auxilioFuerzaPublica = /fuerza pública|intervención policial|pudiendo requerir fuerza pública|con auxilio de la fuerza pública|con el auxilio de la fuerza pública/i.test(texto);
     const conCerrajero = /\b(con\s+cerrajero|con\s+el\s+cerrajero|uso de cerrajero|valerse de cerrajero)\b/i.test(texto);
     const denunciaOtroDomicilio = /denuncie otro domicilio|otro domicilio que se denunciare|denunciar otro domicilio/i.test(texto);
     const denunciaBienes = /denuncie bienes|denunciar bienes|facúltese.*denunciar bienes|denuncia de bienes|denuncia de bienes a embargo|facultad de denunciar bienes|con la facultad de denunciar bienes|individualizar bienes|facultad de individualizar bienes/i.test(texto);
@@ -745,18 +745,18 @@ export class DespachoService {
       .toLowerCase()
       .replace(/\s+/g,' ');
 
-    // Anclas de inicio (prioridad)
     let inicio = [
       'con mas la suma de pesos ',
       'con más la suma de pesos ',
       'con mas la suma de ',
       'con más la suma de ',
       'con mas la suma',
-      'con más la suma'
+      'con más la suma',
+      'con mas la de',
+      'con más la de'
     ].map(k => normalizado.indexOf(k)).filter(i => i !== -1).sort((a,b)=>a-b)[0];
 
     if (inicio === undefined) {
-      // Buscar primer "pesos" después de palabra intereses
       const posInteresesPal = normalizado.indexOf('intereses');
       if (posInteresesPal !== -1) {
         const posPesos = normalizado.indexOf('pesos ', posInteresesPal);
@@ -765,7 +765,6 @@ export class DespachoService {
     }
     if (inicio === undefined) return { montoInteresesTexto: 'MONTO INTERESES', montoInteresesNumerico: '' };
 
-    // Frases que marcan fin (antes de explicación de destino / costas)
     const finFrases = [
       'para responder a intereses',
       'para responder intereses',
@@ -774,6 +773,7 @@ export class DespachoService {
       'por interes',
       'para interes',
       'que se presupuesta',
+      'que se presuponen',
       'costas del juicio',
       'costas'
     ];
@@ -787,41 +787,49 @@ export class DespachoService {
     const originalCompact = original.replace(/\s+/g,' ');
     const segmento = originalCompact.slice(inicio, Math.min(fin + 60, originalCompact.length));
 
-    // Número monetario
-    const numeroMatch = segmento.match(/\(\$ ?([\d\.,]+)\)/);
-    const numeroBruto = numeroMatch ? numeroMatch[1] : '';
-    let montoInteresesNumerico = numeroBruto ? this.monedaPipe.transform(numeroBruto) : '';
-
-    // Fracción -> sólo para centavos (si >0)
-    const fraccionMatch = segmento.match(/CON\s+([0-9]{1,3}\/[0-9]{1,3})/i);
-    let sufijoCentavos = '';
-    if (fraccionMatch) {
-      const [numStr, denStr] = fraccionMatch[1].split('/');
-      const num = parseInt(numStr,10);
-      const den = parseInt(denStr,10);
-      if (den === 100 && num > 0) sufijoCentavos = ` CON ${this.numeroATexto(num)} centavos`;
+    const numeroMatch = segmento.match(/\(\s*\$?\s*([\d]{1,3}(?:[.\,]\d{3})*(?:[.,]\d{2})?)\s*(?:[.\-–]{0,2})\s*\)/);
+    let numeroBruto = numeroMatch ? numeroMatch[1] : '';
+    if (!numeroBruto) {
+      const inlineMatch = segmento.match(/\b\$?\s*([\d]{1,3}(?:[.\,]\d{3})*(?:[.,]\d{2})?)\b/);
+      numeroBruto = inlineMatch ? inlineMatch[1] : '';
     }
+    let montoInteresesNumerico = numeroBruto ? this.monedaPipe.transform(
+      numeroBruto
+        .replace(/[^\d.,]/g,'')
+        .replace(/\.(?=\d{3}(\D|$))/g,'')
+        .replace(/,(\d{2})$/,'.$1')
+    ) : '';
 
-    // Literal (similar a capital)
     let literal = '';
-    const regexLiteral = /PESOS?\s+([A-ZÁÉÍÓÚÑa-záéíóúñ ,\.]+?)(?:\s+CON\s+[0-9]{1,3}\/[0-9]{1,3}|\s*\(\$|\s+QUE\s+SE\s+PRESUPUESTA|\s+PARA\s+RESPONDER|\s+POR\s+INTERESES|\s+POR\s+INTERES|\s+PARA\s+INTERESES|\s+PARA\s+INTERES|$)/i;
+    const regexLiteral =
+      /PESOS?\s+([A-ZÁÉÍÓÚÑ ]+?)(?:\s*\(|\s*,\s+QUE\s+SE|\s+QUE\s+SE\s+PRESUPONEN|\s+QUE\s+SE\s+PRESUPUESTA|\s+PARA\s+RESPONDER|\s+POR\s+INTERESES|\s+POR\s+INTERES|\s+PARA\s+INTERESES|\s+PARA\s+INTERES|$)/i;
     const mLit = segmento.match(regexLiteral);
     if (mLit) {
-      literal = mLit[1];
-    } else {
-      const alt = /CON\s+M[ÁA]S\s+LA\s+SUMA\s+DE\s+PESOS?\s+([A-ZÁÉÍÓÚÑa-záéíóúñ ,\.]+?)(?:\s+CON\s+[0-9]{1,3}\/[0-9]{1,3}|\s*\(\$|,|$)/i.exec(segmento);
-      if (alt) literal = alt[1];
+      literal = mLit[1]
+        .replace(/\s{2,}/g,' ')
+        .trim()
+        .replace(/^(Y\s+)?/,'');
     }
+
     literal = this.limpiarLiteralIntereses(literal);
+
+    if (literal.includes('(')) {
+      literal = literal.split('(')[0].trim();
+    }
 
     let montoInteresesTexto = 'MONTO INTERESES';
     if (literal) {
-      montoInteresesTexto = `PESOS ${literal}${sufijoCentavos}`;
-    } else if (!literal && numeroMatch) {
-      montoInteresesTexto = `PESOS (NUMERICO)${sufijoCentavos}`;
+      montoInteresesTexto = `PESOS ${literal}`;
+    } else if (!literal && numeroBruto) {
+      // construir texto desde número si no se pudo extraer literal
+      const numEntero = parseInt(numeroBruto.replace(/[^\d]/g,''),10);
+      const literalAuto = this.numeroATextoGrande(numEntero);
+      if (literalAuto) montoInteresesTexto = `PESOS ${literalAuto.toUpperCase()}`;
     }
 
-    // Si no hubo número y sí literal, intentar conversión (palabras) con pipe
+    if (!montoInteresesNumerico && numeroBruto) {
+      montoInteresesNumerico = this.monedaPipe.transform(numeroBruto);
+    }
     if (!montoInteresesNumerico && literal) {
       const posible = this.monedaPipe.transform(literal);
       if (posible) montoInteresesNumerico = posible;
@@ -831,6 +839,41 @@ export class DespachoService {
       montoInteresesTexto: montoInteresesTexto.replace(/\s+/g,' ').trim(),
       montoInteresesNumerico
     };
+  }
+
+  // Extensión para números grandes (hasta millones)
+  private numeroATextoGrande(n: number): string {
+    if (n === 0) return 'cero';
+    const unidades = ['','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve'];
+    const especiales = ['diez','once','doce','trece','catorce','quince','dieciseis','diecisiete','dieciocho','diecinueve'];
+    const decenas = ['','diez','veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
+    const centenas = ['','ciento','doscientos','trescientos','cuatrocientos','quinientos','seiscientos','setecientos','ochocientos','novecientos'];
+
+    const toTextoMenor100 = (x: number): string => {
+      if (x < 10) return unidades[x];
+      if (x < 20) return especiales[x-10];
+      const d = Math.floor(x/10), u = x%10;
+      if (u === 0) return decenas[d];
+      if (d === 2) return 'veinti' + unidades[u];
+      return decenas[d] + ' y ' + unidades[u];
+    };
+    const toTextoMenor1000 = (x: number): string => {
+      if (x === 100) return 'cien';
+      if (x < 100) return toTextoMenor100(x);
+      const c = Math.floor(x/100);
+      const resto = x % 100;
+      return centenas[c] + (resto ? ' ' + toTextoMenor100(resto) : '');
+    };
+
+    let partes: string[] = [];
+    const millones = Math.floor(n / 1_000_000);
+    const miles = Math.floor((n % 1_000_000) / 1000);
+    const resto = n % 1000;
+
+    if (millones) partes.push(millones === 1 ? 'un millón' : `${toTextoMenor1000(millones)} millones`);
+    if (miles) partes.push(miles === 1 ? 'mil' : `${toTextoMenor1000(miles)} mil`);
+    if (resto) partes.push(toTextoMenor1000(resto));
+    return partes.join(' ').replace(/\s+/g,' ').trim();
   }
 
   private limpiarLiteralIntereses(raw: string): string {
